@@ -31,6 +31,7 @@ struct NODE
 	const char *name;
 	float length[2];
 	double euler;
+	float weight;
 	NODE *parent;
 	NODE *child;
 };
@@ -153,6 +154,7 @@ void evaluateChain(NODE* seg)
 	glPopMatrix();
 }
 
+void normaliseWeights(NODE*);
 
 void setupChain(int j)
 {
@@ -166,9 +168,10 @@ void setupChain(int j)
 			NODE *n = new NODE();
 			n->name = "addedNode";
 			n->parent = nodeList[noofnodes-1];
-			n->length[0] = 0; n->length[1] = 1;
-			nodeList[noofnodes-1]->child = n;
-			nodeList[noofnodes++] = n;
+		 	n->length[0] = 0; n->length[1] = 1;
+			n->weight = 1;
+		 	nodeList[noofnodes-1]->child = n;
+		 	nodeList[noofnodes++] = n;
 		}
 	}
 	else if ( j<noofnodes ) 
@@ -182,10 +185,33 @@ void setupChain(int j)
 		}
 		
 	}
+	normaliseWeights(nodeList[0]);
 	//while (int i = 0; i<j; i++)
 	//{
 		//NODE *n = new NODE;
 	//}
+}
+void normaliseWeights(NODE *start)
+{
+	NODE *node = start;
+	int count = 0;
+	float weights;
+	while (node)
+	{
+		weights += node->weight;
+		count ++;
+		node = node->child;
+	}
+//	float fac = weights/count;
+	float fac = count/weights;
+
+	node = start;
+	while (node)
+	{
+		node->weight = node->weight*fac;
+		node = node->child;
+	}
+	
 }
 
 void setupChain()
@@ -200,10 +226,10 @@ void setupChain()
 	n3->name = "upper"; n3->child = n4; n3->parent = n2;
 	n4->name = "hand";  n4->child = NULL; n4->parent = n3;
 
-	n1->length[0] = 0; n1->length[1] = 1;  
-	n2->length[0] = 0; n2->length[1] = 1;  
-	n3->length[0] = 0; n3->length[1] = 1;  
-	n4->length[0] = 0; n4->length[1] = 1;  
+	n1->length[0] = 0; n1->length[1] = 1; n1->weight = 0.3;
+	n2->length[0] = 0; n2->length[1] = 1; n2->weight = 1;
+	n3->length[0] = 0; n3->length[1] = 1; n3->weight = 1;
+	n4->length[0] = 0; n4->length[1] = 1; n4->weight = 1;
 	//std::cout << "n1 Setup" << std::endl;
 	//
 	
@@ -219,6 +245,7 @@ void setupChain()
 	nodeList[noofnodes++] = n4; //noofnodes++;
 	//std::cout << "LEaving Exit" << std::endl;
 
+	normaliseWeights(n1);
 	return;
 }
 
@@ -273,6 +300,8 @@ void jacobian(NODE *node)
 	float errorTolerance = 30; 
 	float closeTol = 0.05;
 	ColumnVector TH = ColumnVector(noofnodes);
+	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
+	ColumnVector W = ColumnVector(noofnodes);
 	Matrix S = Matrix(2, noofnodes);
 	Matrix J = Matrix(2, noofnodes);
 	Matrix dX = Matrix(2, noofnodes);
@@ -283,6 +312,8 @@ void jacobian(NODE *node)
 	while (node)
 	{
 		TH(m) = node->euler;
+		//W(m,m) = node->weight;
+		W(m) = node->weight;
 
 		double epos[2]; epos[0] = 0; epos[1] = 0;
 		double endpos[2]; endpos[0] = 0; endpos[1] = 0;
@@ -307,40 +338,56 @@ void jacobian(NODE *node)
 	//Matrix Ja = Matrix(2, noofnodes);
 
 	//Matrix JP = Matrix(noofnodes, 2);
-	Matrix error = Matrix(noofnodes, noofnodes);
 	//JP = (J.transpose()*J).inverse()*J.transpose(); 
 	//std::cout << J*JP << std::endl;
 
-	//std::cout << "TH: " << TH << std::endl;
 	//std::cout << "S :\n" << S << std::endl;
 	//std::cout << "J :\n" << J << std::endl;
 	//std::cout << "dX :\n" << dX << std::endl;
 
 	//std::cout << "error : \n" << error << std::endl;
 	//std::cout << "|error| : \n" << sqrt(error.sumsq().sum(1)(0, 0)) << std::endl;
+	//std::cout << J << std::endl;
+	//std::cout << J.pseudo_inverse() << std::endl;
 	
+	std::cout << "dist = " << sqrt(dX(0, 1)*dX(0,1) + dX(1,1)+dX(1,1)) << std::endl;
+	
+	
+	Matrix error = Matrix(noofnodes, noofnodes);
 	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
 	{
 		error = (identity_matrix(2,2) - (J*J.pseudo_inverse())) * dX;
-		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2));
+		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
 	//std::cout << "|error| : \n" << sqrt(error.sumsq().sum(1)(0, 0)) << std::endl;
 
-	//std::cout << JP*dX<< std::endl;
-	//std::cout << (((JP*dX).column(0)).transpose()) + TH << std::endl;
-	//std::cout << J.pseudo_inverse()*dX << std::endl;
 	ColumnVector NewTH = ColumnVector(noofnodes);
 	NewTH = TH + ((J.pseudo_inverse()*dX).column(0));
-	//std::cout << NewTH << std::endl;
+	/*
+	//std::cout << J.pseudo_inverse()*dX << std::endl;
+	Matrix NewTH = Matrix(noofnodes, noofnodes);
+
+	//RowVector NewTH = RowVector(noofnodes);
+	//std::cout << "TH: " << TH;
+	NewTH = ((((J.pseudo_inverse()*dX))));
+	//std::cout << " + " << NewTH - TH << std::endl;
+
+	NewTH = NewTH.column(0)*(W.transpose());
+
+	RowVector NewTHr = RowVector(noofnodes);
+	NewTHr = (NewTH.sum(0)).row(0);
+	*/
 
 	node = startNode;
 	for (int i =0; i<NewTH.length(); i++)	
 	{
 		if (node != NULL)
 		{
-			while (NewTH(i) > 360) { NewTH(i) -= 360; }
-			while (NewTH(i) < -360) { NewTH(i) += 360; }
 			node->euler = NewTH(i);
+			while (node->euler > 360) { node->euler -= 360; }
+			while (node->euler < -360) { node->euler += 360; }
+		//	while (node->euler < -80 ) {node->euler = -80; }
+		//	while (node->euler > 80 ) { node->euler = 80; }
 			node = node->child;
 		} else { std::cout << "Error: Array too long for chain" << std::endl; }
 	}
@@ -394,10 +441,15 @@ void CCD(NODE *cur)
 	if (rotAng < 0.01 ) { return; }
 	if (rotAng > 10) { rotAng = 10; }
 	if (sinA < 0) { rotAng = -rotAng; }
+	std::cout << rotAng << " ";
+	rotAng *= cur->weight;
+	std::cout << rotAng << std::endl;
 	cur->euler += radDeg(rotAng);
 
 	//Normalise to between +- 360
-	if (cur->euler > 2*PI) { cur->euler -= 2*PI; } else if (cur->euler < -2*PI) { cur->euler += 2*PI; }
+	//if (cur->euler > 2*PI) { cur->euler -= 2*PI; } else if (cur->euler < -2*PI) { cur->euler += 2*PI; }
+			while (cur->euler < -80 ) { cur->euler = -80; }
+			while (cur->euler > 80 )  {  cur->euler = 80; }
 
 }
 
@@ -416,7 +468,7 @@ void display(void)
 
 
 	//Centre Sphere
-	glutSolidTeapot(0.5);
+	glutSolidSphere(0.1, 13, 13);
 
 	glPushMatrix();
 		glColor3f(0, 1, 0);
