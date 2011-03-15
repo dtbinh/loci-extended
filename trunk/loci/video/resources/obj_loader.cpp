@@ -197,7 +197,7 @@ namespace video
 
     void parse_obj(vertex_array & va, materials_list & ml, file_resource_cache & texture_cache, const std::string & obj_path, const std::string & mtl_path, bool invert_v_texcood)
     {
-        std::ifstream mtl_ifs(mtl_path.c_str());
+        std::ifstream mtl_ifs(mtl_path);
 
         FILE * obj_file = std::fopen(obj_path.c_str(), "rb");
         if (!obj_file) { return; }

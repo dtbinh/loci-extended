@@ -137,7 +137,10 @@ namespace video
                             GetAsyncKeyState(VK_RCONTROL),
                             GetAsyncKeyState('X'),
 							GetAsyncKeyState('Z'),
-                            GetAsyncKeyState('R')
+                            GetAsyncKeyState('R'),
+							wparam == '1',
+							wparam == '2',
+							wparam == '3'
 							));
                     }
                     break;
