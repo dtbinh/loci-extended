@@ -3,6 +3,7 @@
 
 #include "loci/control/xml/detail/parse_common.h"
 #include "loci/anim/nodes/blend_sequence.h"
+#include <iostream>
 
 namespace loci {
 namespace control {
@@ -29,7 +30,7 @@ namespace detail
     {
         BOOST_FOREACH(const xml_parse_tree::value_type & v, xml)
         {
-            if (!boost::iequals(v.first, "loop")) { continue; }
+            if (!boost::iequals(v.first, "loop")) { std::cout <<"loop" << std::endl; continue;  }
             return boost::iequals(v.second.data(), "true");
         }
         return false;

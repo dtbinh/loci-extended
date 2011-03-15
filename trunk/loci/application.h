@@ -62,6 +62,7 @@ namespace loci
         bool space_key()  const { return inputs.space;  }
         bool f1_key()     const { return inputs.f1;     }
         bool f2_key()     const { return inputs.f2;     }
+		bool esc_key()    const { return inputs.esc;    }
         bool lshift_key() const { return inputs.lshift; }
         bool rshift_key() const { return inputs.rshift; }
         bool lctrl_key()  const { return inputs.lctrl;  }
@@ -108,6 +109,7 @@ namespace loci
                 inputs.space  |= e.space;
                 inputs.f1     |= e.f1;
                 inputs.f2     |= e.f2;
+				inputs.esc    |= e.esc;
                 inputs.lshift |= e.lshift;
                 inputs.rshift |= e.rshift;
                 inputs.lctrl  |= e.lctrl;
@@ -127,6 +129,7 @@ namespace loci
                 inputs.space  &= !e.space;
                 inputs.f1     &= e.f1;
                 inputs.f2     &= e.f2;
+				inputs.esc    &= e.esc;
                 inputs.lshift &= e.lshift;
                 inputs.rshift &= e.rshift;
                 inputs.lctrl  &= e.lctrl;
@@ -188,10 +191,12 @@ namespace loci
 
             // resetting
             if (space_key()) { controller_->reset(); }
+			if (r_key())	 { controller_->reset(); }
 
             // temporal view on/off
             if (f2_key())    { temporal_view(true);  }
             if (f1_key())    { temporal_view(false); }
+			if (esc_key())   { std::cout << "esc pressed: Quitting" << std::endl; ::PostQuitMessage(0); }
 
             // temporal window
             if (lshift_key()) { adjust_temporal_window(100, 0, 0);  }
@@ -200,7 +205,7 @@ namespace loci
             if (rctrl_key())  { adjust_temporal_window(0, -100, 0); }
             if (x_key())      { adjust_temporal_window(0, 0, 10);   }
             if (z_key())      { adjust_temporal_window(0, 0, -10);  }
-			if (r_key())	  { std::cout << "r pressed" << std::endl; controller_->reset(); }
+			
 
             return controller_->update(10);
         }

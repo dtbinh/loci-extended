@@ -130,6 +130,7 @@ namespace video
                             wparam == VK_SPACE,
                             wparam == VK_F1,
                             wparam == VK_F2,
+							wparam == VK_ESCAPE,
                             GetAsyncKeyState(VK_LSHIFT),
                             GetAsyncKeyState(VK_RSHIFT),
                             GetAsyncKeyState(VK_LCONTROL),
