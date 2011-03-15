@@ -1,0 +1,70 @@
+<lociscript>
+
+  <motions>
+    <bvh id="walk"      src="female/Female1_B03_Walk1.bvh" colour="0 0 255" yoffset="0">
+      <sync frames="0 10 20" />
+      <sync frames="5 15 25" />
+    </bvh>
+    <bvh id="run"       src="female/Female1_C03_Run.bvh" colour="255 0 0" />
+    <bvh id="walkToRun" src="female/Female1_C05_WalkToRun.bvh" colour="255 255 0" />
+    <bvh id="stand"     src="female/Female1_A01_Stand.bvh" colour="255 255 0" />
+    <bvh id="sway"      src="female/Female1_A02_Sway.bvh" />
+    <bvh id="skip"      src="female/Female1_A13_Skipping.bvh" />
+    <bvh id="urban"     src="female/Female1_D1_Urban.bvh" />
+    <bvh id="conv"     src="female/Female1_D3_ConversationGestures.bvh" />
+  </motions>
+
+  <masks>
+    <region id="torso">
+      <branch parent="Hips" depth="10" startweight="1" endweight="1" />
+      <branch parent="Hips 1" depth="10" startweight="0" endweight="0" />
+    </region>
+    <region id="legs">
+      <branch parent="Hips 1" depth="10" startweight="1" endweight="1" />
+    </region>
+  </masks>
+
+  <actions>
+
+    <activity id="walk">
+      <animation>
+        <autoturn>
+          <clip motion="walk" />
+        </autoturn>
+      </animation>
+    </activity>
+
+    <activity id="run">
+      <animation>
+        <autoturn>
+          <clip motion="run" />
+        </autoturn>
+      </animation>
+    </activity>
+
+    <activity id="stand">
+      <animation>
+        <autoturn>
+          <clip motion="stand" />
+        </autoturn>
+      </animation>
+    </activity>
+    
+  </actions>
+
+  <actor at="0 0">
+    <perform act="urban" for="2500" overlay="1">
+      <perform act="walk" on="legs" for="-1"/>
+    </perform>
+  </actor>
+
+  <actor at="-100 0" speed="10">
+    <perform act="walk" for="-1">
+    </perform>
+  </actor>  
+  
+  <actor at="-200 0" speed="10">
+    <perform act="urban" for ="2500">
+    </perform>
+  </actor>
+</lociscript>
