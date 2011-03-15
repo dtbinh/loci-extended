@@ -41,6 +41,7 @@ namespace video
                         bool home = false, bool end = false,
                         bool space = false,
                         bool f1 = false, bool f2 = false,
+						bool esc = false,	
                         bool lshift = false, bool rshift = false,
                         bool lctrl = false, bool rctrl = false,
                         bool x = false, bool z = false, bool r = false)
@@ -49,6 +50,7 @@ namespace video
                 , home(home), end(end)
                 , space(space)
                 , f1(f1), f2(f2)
+				, esc(esc)
                 , lshift(lshift), rshift(rshift)
                 , lctrl(lctrl), rctrl(rctrl)
                 , x(x), z(z), r(r)
@@ -60,6 +62,7 @@ namespace video
             bool home, end;
             bool space;
             bool f1, f2;
+			bool esc;
             bool lshift, rshift;
             bool lctrl, rctrl;
             bool x, z, r;
