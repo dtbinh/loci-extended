@@ -70,6 +70,9 @@ namespace loci
         bool x_key()   const    { return inputs.x;      }
         bool z_key()   const    { return inputs.z;      }
         bool r_key()   const    { return inputs.r;      }
+		bool n1_key()   const    { return inputs.n1;      }
+		bool n2_key()   const    { return inputs.n2;      }
+		bool n3_key()   const    { return inputs.n3;      }
 
 
         void move_camera(float yrot, float zoom, float height)
@@ -117,6 +120,9 @@ namespace loci
                 inputs.x      |= e.x;
                 inputs.z      |= e.z;
 				inputs.r      |= e.r;
+				inputs.n1      |= e.n1;
+				inputs.n2      |= e.n2;
+				inputs.n3      |= e.n3;
             }
             else
             {
@@ -137,6 +143,9 @@ namespace loci
                 inputs.x      &= e.x;
                 inputs.z      &= e.z;
 				inputs.r      &= e.r;
+				inputs.n1      &= e.n1;
+				inputs.n2      &= e.n2;
+				inputs.n3      &= e.n3;
             }
         }
 
@@ -150,12 +159,12 @@ namespace loci
     class script_view_application : public application
     {
     public:
-        script_view_application() : controller_(new control::xml_crowd_controller()) { }
+        script_view_application() : controller_(new control::xml_crowd_controller()), updateInterval(10) { }
 
         script_view_application(const platform::tstring & name, unsigned int width, unsigned int height,
                                 const std::string & script_path,
                                 const std::string & scene_path = "", float scale = 1.0f)
-            : controller_(new control::xml_crowd_controller(script_path))
+            : controller_(new control::xml_crowd_controller(script_path)), updateInterval(10)
         {
             application::start(name, width, height, scene_path, scale);
         }
@@ -163,7 +172,7 @@ namespace loci
         script_view_application(const platform::tstring & name, unsigned int width, unsigned int height,
                                 const boost::shared_ptr<control::xml_crowd_controller> & controller,
                                 const std::string & scene_path = "", float scale = 1.0f)
-            : controller_(controller)
+            : controller_(controller), updateInterval(10)
         {
             application::start(name, width, height, scene_path, scale);
         }
@@ -179,6 +188,7 @@ namespace loci
         boost::shared_ptr<control::xml_crowd_controller> controller() const { return controller_; }
 
     private:
+		int updateInterval;
         crowd & update()
         {
             // camera controls
@@ -206,8 +216,11 @@ namespace loci
             if (x_key())      { adjust_temporal_window(0, 0, 10);   }
             if (z_key())      { adjust_temporal_window(0, 0, -10);  }
 			
-
-            return controller_->update(10);
+			if (n1_key())      { updateInterval = 10; }
+			if (n2_key())      { updateInterval = 20; }
+			if (n3_key())      { updateInterval = 30; }
+			std::cout << updateInterval << std::endl;
+            return controller_->update(updateInterval);
         }
 
         boost::shared_ptr<control::xml_crowd_controller> controller_;

@@ -44,7 +44,8 @@ namespace video
 						bool esc = false,	
                         bool lshift = false, bool rshift = false,
                         bool lctrl = false, bool rctrl = false,
-                        bool x = false, bool z = false, bool r = false)
+                        bool x = false, bool z = false, bool r = false,
+						bool n1 = false, bool n2 = false, bool n3 = false)
                 : keydown(keydown)
                 , up(up), down(down), left(left), right(right)
                 , home(home), end(end)
@@ -54,6 +55,7 @@ namespace video
                 , lshift(lshift), rshift(rshift)
                 , lctrl(lctrl), rctrl(rctrl)
                 , x(x), z(z), r(r)
+				, n1(n1), n2(n2), n3(n3)
             {
             }
 
@@ -66,6 +68,7 @@ namespace video
             bool lshift, rshift;
             bool lctrl, rctrl;
             bool x, z, r;
+			bool n1, n2, n3;
         };
 
         typedef boost::function1<void, const input_event &> input_event_delegate;
