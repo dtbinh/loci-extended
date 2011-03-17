@@ -292,53 +292,33 @@ void getTarget(NODE *cur, int *nooftargets, TARGET **retList)
 
 void CCD(NODE *cur)
 {
+	std::cout << cur->name << std::endl;
 	if (!cur) { return; }
 	NODE **eList; int noofends= 0;
 	eList = (NODE**) malloc(sizeof(NODE*) * nooftargets);
 	//NODE *oEnd = end;
 	getEndEffector(cur, &noofends, eList);
 	double epos[2]; epos[0] = 0; epos[1] = 0;
-	double eposS[2]; eposS[0] = 0; eposS[1] = 0;
 	double jpos[2]; jpos[0] = 0; jpos[1] = 0;
-	double jposS[2]; jposS[0] = 0; jposS[1] = 0;
+	double eposS[2];
 	for (int i=0; i<noofends; i++)
 	{
+		eposS[0] = 0; eposS[1] = 0;
 		calcEndPos(eList[i], eposS);
-		if (eList[i]->parent)
-		{
-			calcEndPos(eList[i]->parent, jposS);
-		} else {
-			jposS[0] = 0; jposS[1] = 0;
-		}
 		epos[0] += eposS[0];
 		epos[1] += eposS[1];
-		jpos[0] += jposS[0];
-		jpos[1] += jposS[1];
 	}
 	free(eList);
-
-
-
 	epos[0] /= noofends;
 	epos[1] /= noofends;
-	jpos[0] /= noofends;
-	jpos[1] /= noofends;
-	glColor3f(1.0/noofends, 0 ,0 );
-		glPushMatrix();
-			glTranslatef(epos[0], epos[1], 0);
-			glutWireSphere(0.1, 5, 5);
-		glPopMatrix();
-	//calcEndPos(end, epos);
-	//std::cout << "e: " << end->name << " Pos = " << epos[0] << ", " << epos[1] << std::endl;
-	
-	if (cur->parent) 
-	{
-   
-		//std::cout << "j: " << cur->parent->name << " Pos = " << jpos[0] << ", " << jpos[1] << std::endl;
-	}
-	//end = oEnd;
-	//std::cout << "t: " << "Target Pos = " << IKPosX << ", " << IKPosY << std::endl;
+	//std::cout << "e: " << cur->name << " Pos = " << epos[0] << ", " << epos[1] << std::endl;
 
+	//Get rotation point of current joint - it's parent's end - it's start
+	if (cur->parent)
+	{
+		calcEndPos(cur->parent, jpos);
+	}
+	
 	double ej[2]; ej[0] = epos[0] - jpos[0]; ej[1]= epos[1] - jpos[1];
 	double tj[2]; tj[0] = 0; tj[1] = 0;
 	TARGET **tList; int nooftar = 0;
@@ -349,7 +329,6 @@ void CCD(NODE *cur)
 		//std::cout << nooftar<< " targets for " << cur->name << std::flush;
 		for (int i=0; i< nooftar; i++)
 		{
-			//std::cout << tList[i]->name << " " << std::flush;
 			tj[0] += tList[i]->pos[0] ;
 			tj[1] += tList[i]->pos[1] ;
 		}
@@ -357,7 +336,7 @@ void CCD(NODE *cur)
 		tj[0] /= nooftar; 
 		tj[1] /= nooftar; 
 
-		std::cout << nooftar << " targets " << tj[0] << ", " << tj[1] << std::endl;
+		glColor3f(1.0/nooftar, 0, 0 );
 		glPushMatrix();
 			glTranslatef(tj[0], tj[1], 0);
 			glutWireSphere(0.1, 5, 5);
@@ -365,8 +344,6 @@ void CCD(NODE *cur)
 		tj[0] -= jpos[0]; 
 		tj[1] -= jpos[1];
 
-		//tj[0] = tList[0]->pos[0];
-		//tj[1] = tList[0]->pos[1];
 	} else {
 		free(tList);
 	   	return;
@@ -374,9 +351,9 @@ void CCD(NODE *cur)
 	free(tList);
 
 
-	std::cout << cur->name << " ";
-	std::cout << "ej: = " << ej[0] << ", " << ej[1] << std::endl;
-	std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
+	//std::cout << cur->name << " ";
+	//std::cout << "ej: = " << ej[0] << ", " << ej[1] << std::endl;
+	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
 
 	double ejdottj = ej[0]*tj[0] + ej[1]*tj[1];
 	double minejdottj = ej[0]*tj[1] - ej[1]*tj[0];
@@ -396,7 +373,10 @@ void CCD(NODE *cur)
 	cur->euler += radDeg(rotAng);
 
 	//Normalise to between +- 360
-	if (cur->euler > 2*PI) { cur->euler -= 2*PI; } else if (cur->euler < -2*PI) { cur->euler += 2*PI; }
+	if (cur->euler > 360) { cur->euler -= 360; } else if (cur->euler < -360) { cur->euler += 360; }
+
+	if (cur->euler > 80) { cur->euler = 80; }
+	if (cur->euler < -80) { cur->euler = -80; }
 
 }
 
@@ -415,14 +395,14 @@ void display(void)
 
 
 	//Centre Sphere
-	glutSolidTeapot(0.5);
+	glutSolidSphere(0.1, 17, 17);
 
 	for (int i=0; i < nooftargets; i++)
 	{
 		glPushMatrix();
 			glColor3f(0, 1, 0);
 			glTranslatef(targetList[i]->pos[0], targetList[i]->pos[1], 0);
-			glutSolidSphere(0.2, 5, 5);
+			glutWireSphere(0.2, 5, 5);
 		glPopMatrix();
 	}
 
@@ -470,17 +450,16 @@ void display(void)
 		std::cout << "CCD: " << nListO[i]->name << " " << std::flush;
 		CCD(nListO[i], nList[nListI[i]]);
 	}
-	std::cout << std::endl;
 	*/
 	//exit(0);
-	CCD(nodeList[3]);
-	CCD(nodeList[2]);
 	CCD(nodeList[5]);
 	CCD(nodeList[4]);
-	CCD(nodeList[1]);
+	CCD(nodeList[3]);
+	CCD(nodeList[2]);
+	CCD(nodeList[1]); 
 	CCD(nodeList[0]);
-
 	std::cout << std::endl;
+
 
 	//std::cout << "EVALUATEING CHAIN" << std::endl;
 	evaluateChain(nodeList[0]);
