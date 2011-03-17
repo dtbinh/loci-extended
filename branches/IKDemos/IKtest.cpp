@@ -1,9 +1,7 @@
 //COMPILE WITH: mkoctfile -lGL -lglut --link-stand-alone IKtest.cpp -o IKtest && ./IKtest
-#include <GL/glew.h>
 #include <GL/glut.h>
 
 #include <octave/oct.h>
-#include <octave/octave.h>
 
 #include <iostream>
 #include <cmath>
@@ -11,7 +9,8 @@
 bool* keyStates = new bool[256];
 bool* keySpecialStates = new bool[256];
 
-bool doJac = false;
+bool doJac = true;
+bool doLimit = true;
 
 const float PI = 3.14159265;
 
@@ -73,23 +72,6 @@ void reshape (int width, int height)
 
 void setupChain(int);
 
-/*
-void keyOperations (void)
-{
-	if (keyStates['q']) {	std::cout << "HELO" << std::endl; }
-	int mod = glutGetModifiers();
-
-	if ((keyStates['q']) and (mod == GLUT_ACTIVE_ALT)) {	std::cout << "HELO Alt" << std::endl; }
-	if ((keyStates['q']) and not (mod == GLUT_ACTIVE_ALT)) {	std::cout << "HELO" << std::endl; }
-
-	
-	if (keySpecialStates[GLUT_KEY_LEFT]) { std::cout << "LEFT" << std::endl;}
-	if (keySpecialStates[GLUT_KEY_RIGHT]) { std::cout << "RIGHT" << std::endl;}
-	if (keySpecialStates[GLUT_KEY_UP]) { std::cout << "UP" << std::endl;}
-	if (keySpecialStates[GLUT_KEY_DOWN]) { std::cout << "DOWN" << std::endl;}
-}
-*/
-
 void keyPressed (unsigned char key, int x, int y) { 
 	switch (key)
 	{
@@ -99,6 +81,9 @@ void keyPressed (unsigned char key, int x, int y) {
 			break;
 		case ' ':
 			doJac ^= 1;
+			break;
+		case 'l':
+			doLimit ^= 1;
 			break;
 		case '1':
 			setupChain(1);
@@ -123,10 +108,11 @@ void keyPressed (unsigned char key, int x, int y) {
 void keyUp (unsigned char key, int x, int y) { keyStates[key] = false; }
 void keySpecialPressed (int key, int x, int y) { keySpecialStates[key] = true; 
 
-	if (keySpecialStates[GLUT_KEY_LEFT])  { IKPosX -= 0.1; }
-	if (keySpecialStates[GLUT_KEY_RIGHT]) { IKPosX += 0.1; }
-	if (keySpecialStates[GLUT_KEY_DOWN])  { IKPosY -= 0.1; }
-	if (keySpecialStates[GLUT_KEY_UP])    { IKPosY += 0.1; }
+	float d = 0.1;
+	if (keySpecialStates[GLUT_KEY_LEFT])  { IKPosX -= d; }
+	if (keySpecialStates[GLUT_KEY_RIGHT]) { IKPosX += d; }
+	if (keySpecialStates[GLUT_KEY_DOWN])  { IKPosY -= d; }
+	if (keySpecialStates[GLUT_KEY_UP])    { IKPosY += d; }
 }
 void keySpecialUp (int key, int x, int y) { keySpecialStates[key] = false; }
 
@@ -233,10 +219,12 @@ void setupChain()
 	//std::cout << "n1 Setup" << std::endl;
 	//
 	
+	/*
 	n1->euler = 45;
 	n2->euler = 30;
 	n3->euler = -30;
 	n4->euler = 30;
+	*/
 	
 	
 	nodeList[noofnodes++] = n1; //noofnodes++;
@@ -302,9 +290,10 @@ void jacobian(NODE *node)
 	ColumnVector TH = ColumnVector(noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
 	ColumnVector W = ColumnVector(noofnodes);
-	Matrix S = Matrix(2, noofnodes);
-	Matrix J = Matrix(2, noofnodes);
-	Matrix dX = Matrix(2, noofnodes);
+	Matrix S = Matrix(3, noofnodes);
+	Matrix V = Matrix(3, noofnodes);
+	Matrix J = Matrix(3, noofnodes);
+	Matrix dX = Matrix(3, noofnodes);
 	NODE *startNode= node;
 
 	NODE *end = getEndEffector(node);
@@ -316,68 +305,56 @@ void jacobian(NODE *node)
 		W(m) = node->weight;
 
 		double epos[2]; epos[0] = 0; epos[1] = 0;
+		double ppos[2]; ppos[0] = 0; ppos[1] = 0;
 		double endpos[2]; endpos[0] = 0; endpos[1] = 0;
 		calcEndPos(node, epos);
+		if (node->parent) { calcEndPos(node->parent, ppos); }
 		calcEndPos(end, endpos);
 
+		//dX = distance from target to end effector
 		dX(0, m) = IKPosX - endpos[0];   //Minimise dX
 		dX(1, m) = IKPosY - endpos[1];
-		if (sqrt((dX(0,m)*dX(0,m)) + (dX(1,m)*dX(1,m))) < closeTol) { return; }
+		dX(2, m) = 0;
+		//if (sqrt((dX(0,m)*dX(0,m)) + (dX(1,m)*dX(1,m))) < closeTol) { return; }
 
+		//S = endPosition of current node
 		S(0, m) = epos[0];
 		S(1, m) = epos[1];
+		S(2, m) = 0;
 
-		J(0, m) = (IKPosX - S(0, m));
-		J(1, m) = (IKPosY - S(1, m));
-	 
+		//Fake Cross product to fill the Jacobian
+		J(0,m) = (IKPosY - S(1, m)) ;
+		J(1,m) = -(IKPosX - S(0, m)) ;
+		J(2, m) = 0;
+
+		//std::cout << "V" << V << std::endl; 
+		//std::cout << "J" << J << std::endl; 
 
 		m++;
 		if (node->child) { node = node->child; }
 		else { node = NULL; } 
 	}
-	//Matrix Ja = Matrix(2, noofnodes);
 
-	//Matrix JP = Matrix(noofnodes, 2);
-	//JP = (J.transpose()*J).inverse()*J.transpose(); 
-	//std::cout << J*JP << std::endl;
-
-	//std::cout << "S :\n" << S << std::endl;
-	//std::cout << "J :\n" << J << std::endl;
-	//std::cout << "dX :\n" << dX << std::endl;
-
-	//std::cout << "error : \n" << error << std::endl;
-	//std::cout << "|error| : \n" << sqrt(error.sumsq().sum(1)(0, 0)) << std::endl;
-	//std::cout << J << std::endl;
-	//std::cout << J.pseudo_inverse() << std::endl;
-	
-	std::cout << "dist = " << sqrt(dX(0, 1)*dX(0,1) + dX(1,1)+dX(1,1)) << std::endl;
+	//Calculate Distance of end effector to Target. If close, Stop.
+	std::cout << "dist = " << sqrt((dX(0, 0)*dX(0,0)) + (dX(1,0)*dX(1,0))) << std::endl;
+	if (sqrt((dX(0,0)*dX(0,0)) + (dX(1,0)*dX(1,0))) < closeTol) { return; }
 	
 	
+	
+	//If error is small, stop iterating
+	//If large, halve dX
 	Matrix error = Matrix(noofnodes, noofnodes);
 	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
 	{
 		error = (identity_matrix(2,2) - (J*J.pseudo_inverse())) * dX;
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
-	//std::cout << "|error| : \n" << sqrt(error.sumsq().sum(1)(0, 0)) << std::endl;
 
 	ColumnVector NewTH = ColumnVector(noofnodes);
 	NewTH = TH + ((J.pseudo_inverse()*dX).column(0));
-	/*
-	//std::cout << J.pseudo_inverse()*dX << std::endl;
-	Matrix NewTH = Matrix(noofnodes, noofnodes);
+	
 
-	//RowVector NewTH = RowVector(noofnodes);
-	//std::cout << "TH: " << TH;
-	NewTH = ((((J.pseudo_inverse()*dX))));
-	//std::cout << " + " << NewTH - TH << std::endl;
-
-	NewTH = NewTH.column(0)*(W.transpose());
-
-	RowVector NewTHr = RowVector(noofnodes);
-	NewTHr = (NewTH.sum(0)).row(0);
-	*/
-
+	//Update node angles.
 	node = startNode;
 	for (int i =0; i<NewTH.length(); i++)	
 	{
@@ -386,8 +363,6 @@ void jacobian(NODE *node)
 			node->euler = NewTH(i);
 			while (node->euler > 360) { node->euler -= 360; }
 			while (node->euler < -360) { node->euler += 360; }
-		//	while (node->euler < -80 ) {node->euler = -80; }
-		//	while (node->euler > 80 ) { node->euler = 80; }
 			node = node->child;
 		} else { std::cout << "Error: Array too long for chain" << std::endl; }
 	}
@@ -441,15 +416,17 @@ void CCD(NODE *cur)
 	if (rotAng < 0.01 ) { return; }
 	if (rotAng > 10) { rotAng = 10; }
 	if (sinA < 0) { rotAng = -rotAng; }
-	std::cout << rotAng << " ";
 	rotAng *= cur->weight;
-	std::cout << rotAng << std::endl;
 	cur->euler += radDeg(rotAng);
 
-	//Normalise to between +- 360
-	//if (cur->euler > 2*PI) { cur->euler -= 2*PI; } else if (cur->euler < -2*PI) { cur->euler += 2*PI; }
-			while (cur->euler < -80 ) { cur->euler = -80; }
-			while (cur->euler > 80 )  {  cur->euler = 80; }
+	if (doLimit)
+	{
+		while (cur->euler < -80 ) { cur->euler = -80; }
+		while (cur->euler >  80 ) { cur->euler =  80; }
+	} else {
+		//Normalise to between +- 360
+		if (cur->euler > 2*PI) { cur->euler -= 2*PI; } else if (cur->euler < -2*PI) { cur->euler += 2*PI; }
+	}
 
 }
 
@@ -465,7 +442,6 @@ void display(void)
 	light();
 
 	gluLookAt(eyeX, eyeY, eyeZ, atX, atY, atZ, 0, 1, 0);
-
 
 	//Centre Sphere
 	glutSolidSphere(0.1, 13, 13);
