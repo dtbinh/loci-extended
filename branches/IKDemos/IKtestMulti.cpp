@@ -1,6 +1,6 @@
 //g++ IKtestMulti.cpp -o IKtestMulti -lGL -lGLU -lglut && ./IKtestMulti
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <GL/glut.h>
 
 //#include <octave/oct.h>
@@ -10,10 +10,10 @@
 bool* keyStates = new bool[256];
 bool* keySpecialStates = new bool[256];
 
-const float PI = 3.14159265;
+const float PI = 3.14159265f;
 
 float atX = 0, atZ = 0; float atY = 2;
-float eyeX = 0; float eyeY = 2.1; float eyeZ = 7;
+float eyeX = 0; float eyeY = 2.1f; float eyeZ = 7;
 
 
 GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0};
@@ -29,7 +29,7 @@ struct NODE
 {
 	const char *name;
 	float length[2];
-	double euler;
+	float euler;
 	NODE *parent;
 	int noofchildren;
 	NODE **child;
@@ -82,15 +82,16 @@ void keyPressed (unsigned char key, int x, int y) {
 	//int mod = glutGetModifiers();
 	//if ((keyStates['Q']) and (mod == GLUT_ACTIVE_SHIFT)) {	std::cout << "Quitting?" << std::endl; exit(0); }
 	//else if ((keyStates['q']) and not (mod)) {	std::cout << "q" << std::endl; }
-	if (keyStates['a'])  	{ targetList[1]->pos[0] -= 0.1; }
-	if (keyStates['d']) 	{ targetList[1]->pos[0] += 0.1; }
-	if (keyStates['s'])  	{ targetList[1]->pos[1] -= 0.1; }
-	if (keyStates['w'])   	{ targetList[1]->pos[1] += 0.1; }
+	float d = 0.1f;
+	if (keyStates['a'])  	{ targetList[1]->pos[0] -= d; }
+	if (keyStates['d']) 	{ targetList[1]->pos[0] += d; }
+	if (keyStates['s'])  	{ targetList[1]->pos[1] -= d; }
+	if (keyStates['w'])   	{ targetList[1]->pos[1] += d; }
 
-	if (keyStates['j'])  	{ targetList[0]->pos[0] -= 0.1; }
-	if (keyStates['l']) 	{ targetList[0]->pos[0] += 0.1; }
-	if (keyStates['k'])  	{ targetList[0]->pos[1] -= 0.1; }
-	if (keyStates['i'])   	{ targetList[0]->pos[1] += 0.1; }
+	if (keyStates['j'])  	{ targetList[0]->pos[0] -= d; }
+	if (keyStates['l']) 	{ targetList[0]->pos[0] += d; }
+	if (keyStates['k'])  	{ targetList[0]->pos[1] -= d; }
+	if (keyStates['i'])   	{ targetList[0]->pos[1] += d; }
 
 }
 void keyUp (unsigned char key, int x, int y) { keyStates[key] = false; }
@@ -108,9 +109,9 @@ void evaluateChain(NODE* seg)
 	if (seg == NULL ) { return; }
 	//std::cout << seg->name << std::endl;
 	glPushMatrix();
-		glColor3f(0.4, 0, 0);
+		glColor3f(0.4f, 0, 0);
 		glRotatef(seg->euler, 0, 0, 1);
-		glBegin(GL_LINE);
+		glBegin(GL_LINES);
 			glVertex3f(0, 0, 0);
 			glVertex3f(seg->length[0], seg->length[1], 0);
 		glEnd();
@@ -185,6 +186,10 @@ void setupChain()
 	n3->euler = -30;
 	n4->euler = 30;
 	*/
+
+	n1->euler = 0; n2->euler = 0;
+	n3->euler = 0; n3b->euler = 0;
+	n4->euler = 0; n4b->euler = 0;
 	
 	nodeList[noofnodes++] = n1; 
 	nodeList[noofnodes++] = n2; 
@@ -229,7 +234,7 @@ NODE* getFirstEndEffector(NODE *seg)
 }
 
 
-void calcEndPos(NODE *end, double *pos)
+void calcEndPos(NODE *end, float *pos)
 {
 	NODE *thisEnd = end;
 	//Recursively calculate the parent nodes
@@ -298,9 +303,9 @@ void CCD(NODE *cur)
 	eList = (NODE**) malloc(sizeof(NODE*) * nooftargets);
 	//NODE *oEnd = end;
 	getEndEffector(cur, &noofends, eList);
-	double epos[2]; epos[0] = 0; epos[1] = 0;
-	double jpos[2]; jpos[0] = 0; jpos[1] = 0;
-	double eposS[2];
+	float epos[2]; epos[0] = 0; epos[1] = 0;
+	float jpos[2]; jpos[0] = 0; jpos[1] = 0;
+	float eposS[2];
 	for (int i=0; i<noofends; i++)
 	{
 		eposS[0] = 0; eposS[1] = 0;
@@ -319,8 +324,8 @@ void CCD(NODE *cur)
 		calcEndPos(cur->parent, jpos);
 	}
 	
-	double ej[2]; ej[0] = epos[0] - jpos[0]; ej[1]= epos[1] - jpos[1];
-	double tj[2]; tj[0] = 0; tj[1] = 0;
+	float ej[2]; ej[0] = epos[0] - jpos[0]; ej[1]= epos[1] - jpos[1];
+	float tj[2]; tj[0] = 0; tj[1] = 0;
 	TARGET **tList; int nooftar = 0;
 	tList = (TARGET**) malloc(sizeof(TARGET*) * nooftargets);
 	getTarget(cur, &nooftar, tList);
@@ -336,10 +341,10 @@ void CCD(NODE *cur)
 		tj[0] /= nooftar; 
 		tj[1] /= nooftar; 
 
-		glColor3f(1.0/nooftar, 0, 0 );
+		glColor3f(1.0f/nooftar, 0, 0 );
 		glPushMatrix();
 			glTranslatef(tj[0], tj[1], 0);
-			glutWireSphere(0.1, 5, 5);
+			glutWireSphere(0.1f, 5, 5);
 		glPopMatrix();
 		tj[0] -= jpos[0]; 
 		tj[1] -= jpos[1];
@@ -355,19 +360,19 @@ void CCD(NODE *cur)
 	//std::cout << "ej: = " << ej[0] << ", " << ej[1] << std::endl;
 	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
 
-	double ejdottj = ej[0]*tj[0] + ej[1]*tj[1];
-	double minejdottj = ej[0]*tj[1] - ej[1]*tj[0];
-	double ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1]);
-	double tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1]);
+	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1];
+	float minejdottj = ej[0]*tj[1] - ej[1]*tj[0];
+	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1]);
+	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1]);
 
 	if (tjSqr < 0.05) { return; }
-	double cosA = ejdottj/(ejSqr*tjSqr);
-	double sinA = minejdottj/(ejSqr*tjSqr);
+	float cosA = ejdottj/(ejSqr*tjSqr);
+	float sinA = minejdottj/(ejSqr*tjSqr);
 
 	//Limit cosA - eliminates rounding errors.
 	cosA = cosA>-1?cosA:-1;
 	cosA = cosA<1?cosA:1;
-	double rotAng = acos(cosA);
+	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
 	if (sinA < 0) { rotAng = -rotAng; }
 	cur->euler += radDeg(rotAng);
@@ -467,14 +472,14 @@ void display(void)
 
 	glEnable(GL_BLEND);
 	glPushMatrix();
-		glColor4f(0.9, 0.8, 0.8, 0.05);
-		glTranslatef(0, 0, -0.05);
-		glScalef(1, 1, 0.001);
-		glutSolidSphere(4, 17, 17);
+		glColor4f(0.9f, 0.8f, 0.8f, 0.05f);
+		glTranslatef(0, 0, -0.05f);
+		glScalef(1, 1, 0.001f);
+		//glutSolidSphere(4, 17, 17);
 	glPopMatrix();
 	
 	float fs = 4;
-	glColor4f(0.2, 0.8, 0.8, 0.1);
+	glColor4f(0.2f, 0.8f, 0.8f, 0.1f);
 	glBegin(GL_QUADS);
 		glVertex3f(-fs, 0, -fs);
 		glVertex3f(fs, 0, -fs);

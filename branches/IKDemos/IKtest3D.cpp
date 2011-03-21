@@ -6,16 +6,18 @@
 #include <iostream>
 #include <cmath>
 
-bool* keyStates = new bool[256];
+bool* keyStates = new bool[256]; 
+
 bool* keySpecialStates = new bool[256];
+
 
 bool doJac = false;
 bool doLimit = true;
 
-const float PI = 3.14159265;
+const float PI = 3.14159265f;
 
 float atX = 0, atZ = 0; float atY = 2;
-float eyeX = -4; float eyeY = 2.1; float eyeZ = 7;
+float eyeX = -4; float eyeY = 2.1f; float eyeZ = 7;
 
 
 GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0};
@@ -98,7 +100,7 @@ void keyPressed (unsigned char key, int x, int y) {
 		case '6':
 			setupChain(6);		break;
 	}
-	float d = 0.1;
+	float d = 0.1f;
 
 	if (keyStates['a'])		{ IKPosX -= d; }
 	if (keyStates['d'])		{ IKPosX += d; }
@@ -110,7 +112,7 @@ void keyPressed (unsigned char key, int x, int y) {
 void keyUp (unsigned char key, int x, int y) { keyStates[key] = false; }
 void keySpecialPressed (int key, int x, int y) { keySpecialStates[key] = true; 
 
-	float d = 0.1;
+	float d = 0.1f;
 	if (keySpecialStates[GLUT_KEY_LEFT])  { IKPosX -= d; }
 	if (keySpecialStates[GLUT_KEY_RIGHT]) { IKPosX += d; }
 	if (keySpecialStates[GLUT_KEY_DOWN])  { IKPosY -= d; }
@@ -130,9 +132,9 @@ void evaluateChain(NODE* seg)
 {
 	//std::cout << seg->name << std::endl;
 	glPushMatrix();
-		glColor3f(0.4, 0, 0);
+		glColor3f(0.4f, 0, 0);
 		glRotatef(seg->euler[0], 0, 0, 1);
-		glBegin(GL_LINE);
+		glBegin(GL_LINES);
 			glVertex3f(0, 0, 0);
 			glVertex3f(seg->length[0], seg->length[1], seg->length[2]);
 		glEnd();
@@ -183,7 +185,7 @@ void normaliseWeights(NODE *start)
 {
 	NODE *node = start;
 	int count = 0;
-	float weights;
+	float weights = 0;
 	while (node)
 	{
 		weights += node->weight;
@@ -214,10 +216,10 @@ void setupChain()
 	n3->name = "upper"; n3->child = n4; n3->parent = n2;
 	n4->name = "hand";  n4->child = NULL; n4->parent = n3;
 
-	n1->length[0] = 0; n1->length[1] = 1; n1->length[2] = 0.5; n1->weight = 0.3;
-	n2->length[0] = 0; n2->length[1] = 1; n2->length[2] = 0.5; n2->weight = 1;
-	n3->length[0] = 0; n3->length[1] = 1; n3->length[2] = 0.5; n3->weight = 1;
-	n4->length[0] = 0; n4->length[1] = 1; n4->length[2] = 0.5; n4->weight = 1;
+	n1->length[0] = 0; n1->length[1] = 1; n1->length[2] = 0.5f; n1->weight = 0.3f;
+	n2->length[0] = 0; n2->length[1] = 1; n2->length[2] = 0.5f; n2->weight = 1;
+	n3->length[0] = 0; n3->length[1] = 1; n3->length[2] = 0.5f; n3->weight = 1;
+	n4->length[0] = 0; n4->length[1] = 1; n4->length[2] = 0.5f; n4->weight = 1;
 	//std::cout << "n1 Setup" << std::endl;
 	//
 	
@@ -403,25 +405,25 @@ void CCD(NODE *cur)
 	//glPopMatrix();
 
 
-	double ej[2]; ej[0] = epos[0] - jpos[0]; ej[1]= epos[1] - jpos[1];
-	double tj[2]; tj[0] = IKPosX - jpos[0];  tj[1] = IKPosY - jpos[1];
+	float ej[2]; ej[0] = epos[0] - jpos[0]; ej[1]= epos[1] - jpos[1];
+	float tj[2]; tj[0] = IKPosX - jpos[0];  tj[1] = IKPosY - jpos[1];
 
 	//std::cout << "ej: = " << ej[0] << ", " << ej[1] << std::endl;
 	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
 
-	double ejdottj = ej[0]*tj[0] + ej[1]*tj[1];
-	double minejdottj = ej[0]*tj[1] - ej[1]*tj[0];
-	double ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1]);
-	double tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1]);
+	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1];
+	float minejdottj = ej[0]*tj[1] - ej[1]*tj[0];
+	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1]);
+	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1]);
 
 	if (tjSqr < 0.05) { return; }
-	double cosA = ejdottj/(ejSqr*tjSqr);
-	double sinA = minejdottj/(ejSqr*tjSqr);
+	float cosA = ejdottj/(ejSqr*tjSqr);
+	float sinA = minejdottj/(ejSqr*tjSqr);
 
 	//Limit cosA - eliminates rounding errors.
 	cosA = cosA>-1?cosA:-1;
 	cosA = cosA<1?cosA:1;
-	double rotAng = acos(cosA);
+	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
 	if (rotAng > 10) { rotAng = 10; }
 	if (sinA < 0) { rotAng = -rotAng; }
@@ -489,7 +491,7 @@ void display(void)
 
 	float fs = 4;
 	glEnable(GL_BLEND);
-	glColor4f(0.2, 0.8, 0.8, 0.3);
+	glColor4f(0.2f, 0.8f, 0.8f, 0.3f);
 	glBegin(GL_QUADS);
 		glVertex3f(-fs, 0, -fs);
 		glVertex3f(fs, 0, -fs);
@@ -498,14 +500,14 @@ void display(void)
 	glEnd();
 
 	glPushMatrix();
-		glColor4f(0.9, 0.8, 0.8, 0.05);
-		glTranslatef(0, 0, -0.05);
-		glScalef(1, 1, 0.001);
+		glColor4f(0.9f, 0.8f, 0.8f, 0.05f);
+		glTranslatef(0, 0, -0.05f);
+		glScalef(1, 1, 0.001f);
 		glutSolidSphere(noofnodes, 17, 17);
 	glPopMatrix();
 
 
-	glColor4f(0.2, 0.8, 0.8, 0.3);
+	glColor4f(0.2f, 0.8f, 0.8f, 0.3f);
 	glBegin(GL_QUADS);
 		glVertex3f(-fs, 0, 0);
 		glVertex3f(fs, 0, 0);
@@ -520,6 +522,7 @@ void display(void)
 
 
 int main (int argc, char **argv) {
+	for (int i=0; i<256; i++) { keyStates[i] = false; keySpecialStates[i] = false; }
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_DEPTH);
 	glutInitWindowSize(500, 500);
