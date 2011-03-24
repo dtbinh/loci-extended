@@ -75,7 +75,7 @@ void setupChain(int);
 void keyPressed (unsigned char key, int x, int y) { 
 	switch (key)
 	{
-		case 'Q':
+		case 'Q': case 0x1B:
 			std::cout << "Quitting" << std::endl;
 			exit(0);
 			break;
@@ -126,7 +126,7 @@ float degRad (float rad) { return rad*PI/180; }
 
 void evaluateChain(NODE* seg)
 {
-	//std::cout << seg->name << std::endl;
+	std::cout << seg->name << std::endl;
 	glPushMatrix();
 		glColor3f(0.4, 0, 0);
 		glRotatef(seg->euler, 0, 0, 1);
@@ -206,16 +206,19 @@ void setupChain()
 	NODE *n2 = new NODE;
 	NODE *n3 = new NODE;
 	NODE *n4 = new NODE;
+	NODE *n5 = new NODE;
 
 	n1->name = "root"; n1->child = n2; n1->parent = NULL;
 	n2->name = "lower"; n2->child = n3; n2->parent = n1;
 	n3->name = "upper"; n3->child = n4; n3->parent = n2;
-	n4->name = "hand";  n4->child = NULL; n4->parent = n3;
+	n4->name = "hand";  n4->child = n5; n4->parent = n3;
+	n5->name = "point";  n5->child = NULL; n5->parent = n4;
 
 	n1->length[0] = 0; n1->length[1] = 1; n1->weight = 0.3;
 	n2->length[0] = 0; n2->length[1] = 1; n2->weight = 1;
 	n3->length[0] = 0; n3->length[1] = 1; n3->weight = 1;
 	n4->length[0] = 0; n4->length[1] = 1; n4->weight = 1;
+	n5->length[0] = 0; n5->length[1] = 0; n5->weight = 1;
 	//std::cout << "n1 Setup" << std::endl;
 	//
 	
@@ -231,6 +234,7 @@ void setupChain()
 	nodeList[noofnodes++] = n2; //noofnodes++;
 	nodeList[noofnodes++] = n3; //noofnodes++;
 	nodeList[noofnodes++] = n4; //noofnodes++;
+	nodeList[noofnodes++] = n5; //noofnodes++;
 	//std::cout << "LEaving Exit" << std::endl;
 
 	normaliseWeights(n1);
@@ -300,8 +304,8 @@ void jacobian(NODE *node)
 	int m = 0;
 	while (node)
 	{
+		std::cout << node->name;
 		TH(m) = node->euler;
-		//W(m,m) = node->weight;
 		W(m) = node->weight;
 
 		double epos[2]; epos[0] = 0; epos[1] = 0;
@@ -312,17 +316,20 @@ void jacobian(NODE *node)
 		calcEndPos(end, endpos);
 
 		//dX = distance from target to end effector
-		dX(0, m) = IKPosX - endpos[0];   //Minimise dX
-		dX(1, m) = IKPosY - endpos[1];
+		std::cout << "dx";
+		dX(0, m) = IKPosX - epos[0];   //Minimise dX
+		dX(1, m) = IKPosY - epos[1];
 		dX(2, m) = 0;
 		//if (sqrt((dX(0,m)*dX(0,m)) + (dX(1,m)*dX(1,m))) < closeTol) { return; }
 
 		//S = endPosition of current node
+		std::cout << "S";
 		S(0, m) = epos[0];
 		S(1, m) = epos[1];
 		S(2, m) = 0;
 
 		//Fake Cross product to fill the Jacobian
+		std::cout << "J";
 		J(0,m) = (IKPosY - S(1, m)) ;
 		J(1,m) = -(IKPosX - S(0, m)) ;
 		J(2, m) = 0;
@@ -344,14 +351,17 @@ void jacobian(NODE *node)
 	//If error is small, stop iterating
 	//If large, halve dX
 	Matrix error = Matrix(noofnodes, noofnodes);
+	std::cout << "Size of J*J'" << (J*J.pseudo_inverse()).cols();
+	std::cout << " " << (J*J.pseudo_inverse()).rows() << std::endl;
 	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
 	{
-		error = (identity_matrix(2,2) - (J*J.pseudo_inverse())) * dX;
+		error = (identity_matrix(3,3) - (J.pseudo_inverse()*J)) * dX;
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
 
 	ColumnVector NewTH = ColumnVector(noofnodes);
-	NewTH = TH + ((J.pseudo_inverse()*dX).column(0));
+	NewTH = TH + (((J.pseudo_inverse())*dX).column(0));
+	std::cout <<  (J.transpose()*((J.pseudo_inverse())*dX)) << std::endl;
 	
 
 	//Update node angles.
