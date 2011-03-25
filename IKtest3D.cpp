@@ -2,6 +2,7 @@
 #include <GL/glut.h>
 
 #include <octave/oct.h>
+#include "nodeFuncs.h"
 
 #include <iostream>
 #include <cmath>
@@ -14,8 +15,6 @@ bool* keySpecialStates = new bool[256];
 bool doJac = false;
 bool doLimit = true;
 
-const float PI = 3.14159265f;
-
 float atX = 0, atZ = 0; float atY = 2;
 float eyeX = -4; float eyeY = 2.1f; float eyeZ = 7;
 
@@ -27,15 +26,6 @@ GLfloat whiteDiffuseLight[] = { 1.0, 1.0, 1.0};
 GLfloat blankMaterial[] = { 0.0, 0.0, 0.0};
 GLfloat mShininess[] = {128};
 
-struct NODE 
-{
-	const char *name;
-	float length[3];
-	float euler[3];
-	float weight;
-	NODE *parent;
-	NODE *child;
-};
 
 int noofnodes = 0;
 NODE *nodeList[10];
@@ -126,8 +116,6 @@ void mouseFunc (int button, int state, int x, int y)
 {
 
 }
-float radDeg (float rad) { return rad*180/PI; }
-float degRad (float rad) { return rad*PI/180; }
 
 
 void evaluateChain(NODE* seg)
@@ -246,29 +234,31 @@ void setupChain()
 	na->length[0] = 0; na->length[1] = 1; na->length[2] = 0; na->weight = 1;
 	na->euler[0] = 0;	na->euler[1] = 0;	na->euler[2] = 0;
 	na->child = NULL; na->parent = NULL;
-	testList[nooftests++] = na;
 
 	NODE *nb = new NODE;
 	nb->name = "test2";
 	nb->length[0] = 0; nb->length[1] = 2; nb->length[2] = 0; nb->weight = 1;
 	nb->euler[0] = 45;	nb->euler[1] = 0;	nb->euler[2] = 0;
 	nb->child = NULL; nb->parent = NULL;
-	testList[nooftests++] = nb;
 
 	NODE *ne = new NODE;
 	ne->name = "test5";
 	ne->length[0] = 0; ne->length[1] = 1; ne->length[2] = 0; ne->weight = 1;
 	ne->euler[0] = 45;	ne->euler[1] = 0;	ne->euler[2] = -80;
 	ne->child = NULL; ne->parent = NULL;
-	testList[nooftests++] = ne;
 
 	NODE *ng = new NODE;
 	ng->name = "test5";
 	ng->length[0] = 0; ng->length[1] = 1; ng->length[2] = 0; ng->weight = 1;
 	ng->euler[0] = 45;	ng->euler[1] = 30;	ng->euler[2] = -80;
 	ng->child = NULL; ng->parent = NULL;
-	testList[nooftests++] = ng;
 
+	
+	testList[nooftests++] = na;
+	testList[nooftests++] = nb;
+	testList[nooftests++] = ne;
+	testList[nooftests++] = ng;
+	
 
 
 	NODE *nc = new NODE;
@@ -277,22 +267,24 @@ void setupChain()
 	nc->name = "test-3";
 	nc->length[0] = 0; nc->length[1] = 1; nc->length[2] = 0; nc->weight = 1;
 	nc->child = nd; nc->parent = NULL;
-	testList[nooftests++] = nc;
 
 	nd->name = "test-3a";
 	nd->length[0] = 0; nd->length[1] = 1; nd->length[2] = 0; nd->weight = 1;
 	nd->child = nf; nd->parent = nc;
 
-	testList[nooftests++] = nd;
 	nf->name = "test-3b";
 	nf->length[0] = 0; nf->length[1] = 1; nf->length[2] = 0; nf->weight = 1;
 	nf->child = NULL; nf->parent = nd;
-	testList[nooftests++] = nf;
 
 	nc->euler[0] = 30;	nc->euler[1] = 0;	nc->euler[2] = 0;
 	nd->euler[0] = -60;	nd->euler[1] = 0;	nd->euler[2] = 0;
 	nf->euler[0] = 0;	nf->euler[1] = 0;	nf->euler[2] = 60;
 
+	
+	testList[nooftests++] = nc;
+	testList[nooftests++] = nd;
+	testList[nooftests++] = nf;
+	
 
 	NODE *nh = new NODE;
 	NODE *ni = new NODE;
@@ -306,8 +298,8 @@ void setupChain()
 	ni->child = NULL; ni->parent = nh;
 	testList[nooftests++] = ni;
 
-	nh->euler[0] = 0;	nh->euler[1] = 0;	nh->euler[2] = -40;
-	ni->euler[0] = 0;	ni->euler[1] = 0;	ni->euler[2] = -40;
+	nh->euler[0] = 0;	nh->euler[1] = 0;	nh->euler[2] = -45;
+	ni->euler[0] = 0;	ni->euler[1] = 0;	ni->euler[2] = -45;
 
 
 
@@ -316,162 +308,7 @@ void setupChain()
 	return;
 }
 
-NODE* getEndEffector(NODE *seg)
-{
-	if (seg->child)
-	{
-		getEndEffector(seg->child);
-	}
-	else
-	{
-		return seg;
-	}
-}
 
-Matrix fillRotMat(float a, float b, float g)
-{
-	//XYZ Matrix - Wikipedia?
-	Matrix rotMat = Matrix(3,3); rotMat.fill(0);
-	rotMat(0,0) = cos(b)*cos(g);
-	rotMat(0,1) = -cos(a)*sin(g) + sin(a)*sin(b)*cos(g);;
-	rotMat(0,2) = sin(a)*sin(g) + cos(a)*sin(b)*cos(g);
-
-	rotMat(1,0) = cos(b)*cos(g);
-	rotMat(1,1) = cos(a)*cos(g) + sin(a)*sin(b)*sin(g);
-	rotMat(1,2) = -sin(a)*cos(g) + cos(a)*sin(b)*sin(g);
-
-	rotMat(2,0) = -sin(b);
-	rotMat(2,1) = sin(a)*cos(b);
-	rotMat(2,2) = cos(a)*cos(b);
-
-	return rotMat;
-
-	/* // ZYX -- presentation order
-	rotMat(0,0) = cos(a)*cos(b)*cos(g)-sin(a)*sin(g);
-	rotMat(0,1) = -cos(a)*cos(b)*sin(g)-sin(a)*cos(g);
-	rotMat(0,2) = cos(a)*sin(b);
-
-	rotMat(1,0) = sin(a)*cos(b)*cos(g)+cos(a)*sin(g);
-	rotMat(1,1) = -sin(a)*cos(b)*sin(g)+cos(a)*cos(g);
-	rotMat(1,2) = sin(a)*sin(b);
-
-	rotMat(2,0) = -sin(b)*cos(g);
-	rotMat(2,1) = sin(b)*sin(g);
-	rotMat(2,2) = -cos(b);
-	*/
-}
-
-/*
- * calcEndPos
- * take a NODE and a float array of length 3
- * fill the array with x,y,z coords of the nodes's end position
- */
-void calcEndPos(NODE *end, float *pos)
-{
-	NODE *thisEnd = end;
-	//Recursively calculate the parent nodes
-	if (end->parent != NULL)
-	{
-		calcEndPos(end->parent, pos);
-	} 
-	else
-	{
-		pos[0] = 0; pos[1] = 0; pos[2] = 0;
-	}
-	//Iteratively get the orientation given the parent nodes
-	/*
-	float pThetaX, pThetaY, pThetaZ;
-	pThetaX = 0;
-	pThetaY = 0;
-	pThetaZ = 0;
-	*/
-	Matrix pRotMatF = Matrix(3,3).fill(0);
-	Matrix pRotMat = Matrix(3,3).fill(0);
-	while ((end->parent != NULL)) { 
-		end = end->parent;
-	}
-
-	while (end != thisEnd)
-	{
-
-		Matrix pRotMatT = Matrix(3,3).fill(0);
-		pRotMatT = fillRotMat(degRad(end->euler[0]), degRad(end->euler[1]), degRad(end->euler[2]));
-		if ((mx_el_eq(pRotMat, 0) == boolMatrix(3,3,1))){
-		   	pRotMatF = pRotMatT; 
-		} else {
-			pRotMatF = pRotMat *pRotMatT;
-		}
-		pRotMat = pRotMatF;
-		std::cout << "pRotMat" << pRotMatF << std::endl;
-
-	//	pThetaX += end->parent->euler[0]; 
-	//	pThetaY += end->parent->euler[1]; 
-	//	pThetaZ += end->parent->euler[2]; 
-		end = end->child;	
-	}
-	end = thisEnd;
-	
-
-	//std::cout << pRotMatF << std::endl;
-	/*
-	std::cout << pThetaX << " ";
-	std::cout << pThetaY << " ";
-	std::cout << pThetaZ << " " << std::endl;
-	*/
-
-	//length of node and angle from vertical.
-	float a, b, g;
-	a = degRad(end->euler[0]);
-	b = degRad(end->euler[1]);
-	g = degRad(end->euler[2]);
-
-	Matrix rotMat = Matrix(3,3);
-	Matrix tRotMat = Matrix(3,3);
-	rotMat = fillRotMat(a,b,g);
-	ColumnVector lenVect = ColumnVector(3);
-	ColumnVector posVect = ColumnVector(3);
-
-	lenVect(0) = end->length[0];
-	lenVect(1) = end->length[1];
-	lenVect(2) = end->length[2];
-
-	std::cout << (bool)(mx_el_eq(pRotMat, 0) == boolMatrix(3,3,1)) << std::endl;
-	if (mx_el_eq(pRotMat, 0) == boolMatrix(3,3,1)) {
-		tRotMat = rotMat;
-	} else {
-		tRotMat = rotMat*pRotMat;
-	}
-	std::cout << tRotMat << std::endl;
-
-	posVect = tRotMat*lenVect;
-
-	//std::cout << radDeg(a) << " " << radDeg(b) << " " << radDeg(g)  << std::endl;
-	//std::cout << rotMat << std::endl;
-	//std::cout << posVect << std::endl;
-
-
-	float h = sqrt(end->length[0]*end->length[0] + end->length[1]*end->length[1] + end->length[2]*end->length[2]);
-	float h2 = sqrt(posVect(0)*posVect(0) + posVect(1)*posVect(1) + posVect(2)*posVect(2));
-
-	//assert(h == h2);
-
-	//float theta = atan2(end->length[0], end->length[1]);
-
-	//std::cout << end->name << " h = " << h << ", theta = " << radDeg(theta) << std::endl;
-
-	pos[0] += posVect(0);
-	pos[1] += posVect(1);
-	pos[2] += posVect(2);
-
-	//Simple Trig to get the end vector position of this node.
-	//pos[0] += h*-sin(theta + degRad(end->euler[0]+pThetaX));
-	//pos[1] += h*cos(theta + degRad(end->euler[0]+pThetaX));
-	//pos[2] += 0; 
-
-	//std::cout << end->name << " End Pos = " << pos[0] << ", " << pos[1] << std::endl;
-
-	return;
-}
 
 void transpose(float*, int, int, float*);
 bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
@@ -652,22 +489,26 @@ void display(void)
 
 	for (int i=0; i<nooftests; i++)
 	{
+
 		std::cout << testList[i]->name << std::endl;
-		if (testList[i]->parent == NULL)
-		{
-			evaluateChain(testList[i]);
-		}
 		float pos[3];
 		pos[0] = 0; pos[1] = 0; pos[2] = 0;
 		calcEndPos(testList[i], pos);
+		glColor3f(0.5, 0, 0);
 		glPushMatrix();
 		 glTranslatef(pos[0], pos[1], pos[2]);
 		 glutSolidSphere(0.1, 5, 5);
 		glPopMatrix();
+
+		if (testList[i]->parent == NULL)
+		{
+			evaluateChain(testList[i]);
+		}
 	}
 	
 	//evaluateChain(nodeList[0]);
 
+	/*
 	if (doJac)
 	{
 		//jacobian(nodeList[0]);
@@ -687,6 +528,7 @@ void display(void)
 		}
 
 	}
+	*/
 
 
 	float fs = 4;
@@ -721,6 +563,7 @@ void display(void)
 }
 
 
+#ifndef MAIN
 int main (int argc, char **argv) {
 	for (int i=0; i<256; i++) { keyStates[i] = false; keySpecialStates[i] = false; }
 	glutInit(&argc, argv);
@@ -746,3 +589,4 @@ int main (int argc, char **argv) {
 
 	glutMainLoop();
 }
+#endif
