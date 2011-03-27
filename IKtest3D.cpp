@@ -240,7 +240,7 @@ void setupChain()
 	nb->length[0] = 0; nb->length[1] = 2; nb->length[2] = 0; nb->weight = 1;
 	nb->euler[0] = 45;	nb->euler[1] = 0;	nb->euler[2] = 0;
 	nb->child = NULL; nb->parent = NULL;
-
+	
 	NODE *ne = new NODE;
 	ne->name = "test5";
 	ne->length[0] = 0; ne->length[1] = 1; ne->length[2] = 0; ne->weight = 1;
@@ -252,6 +252,8 @@ void setupChain()
 	ng->length[0] = 0; ng->length[1] = 1; ng->length[2] = 0; ng->weight = 1;
 	ng->euler[0] = 45;	ng->euler[1] = 30;	ng->euler[2] = -80;
 	ng->child = NULL; ng->parent = NULL;
+	
+
 
 	
 	testList[nooftests++] = na;
@@ -298,8 +300,8 @@ void setupChain()
 	ni->child = NULL; ni->parent = nh;
 	testList[nooftests++] = ni;
 
-	nh->euler[0] = 0;	nh->euler[1] = 0;	nh->euler[2] = -45;
-	ni->euler[0] = 0;	ni->euler[1] = 0;	ni->euler[2] = -45;
+	nh->euler[0] = -80;	nh->euler[1] = 0;	nh->euler[2] = -45;
+	ni->euler[0] = 30;	ni->euler[1] = 20;	ni->euler[2] = 0;
 
 
 
@@ -569,7 +571,7 @@ int main (int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_DEPTH);
 	glutInitWindowSize(500, 500);
-	glutCreateWindow("First OpenGL Window");
+	glutCreateWindow("IK Tests 3D");
 	//glLineWidth(6);
 	
 	setupChain();
