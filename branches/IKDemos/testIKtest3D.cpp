@@ -335,9 +335,9 @@ na->euler[0] = 0;	na->euler[1] = 70;	na->euler[2] = 0;
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
 calcEndPos(na, pos);
-CHECK_CLOSE(0.949, pos[0], D);
+CHECK_CLOSE(1.414, pos[0], D);
 CHECK_CLOSE(1.414, pos[1], D);
-CHECK_CLOSE(-0.664, pos[2], D);
+CHECK_CLOSE(0, pos[2], D);
 }
 
 TEST(DoubleNodeXZRotXZ)
@@ -357,9 +357,9 @@ na->euler[0] = 55;	na->euler[1] = 0;	na->euler[2] = -20;
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
 calcEndPos(na, pos);
-CHECK_CLOSE(1.168, pos[0], D);
-CHECK_CLOSE(0.348, pos[1], D);
-CHECK_CLOSE(1.288, pos[2], D);
+CHECK_CLOSE(0.792, pos[0], D);
+CHECK_CLOSE(0.514, pos[1], D);
+CHECK_CLOSE(1.479, pos[2], D);
 }
 
 TEST(DoubleNodeXYZRotXYZ)
@@ -379,9 +379,9 @@ na->euler[0] = 100;	na->euler[1] = -60;	na->euler[2] = 35;
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
 calcEndPos(na, pos);
-CHECK_CLOSE(0.819, pos[0], D);
-CHECK_CLOSE(0.611, pos[1], D);
-CHECK_CLOSE(0.640, pos[2], D);
+CHECK_CLOSE(0.655, pos[0], D);
+CHECK_CLOSE(-0.551, pos[1], D);
+CHECK_CLOSE(0.066, pos[2], D);
 }
 
 
@@ -550,6 +550,59 @@ CHECK_CLOSE(1.673, pos[1], D);
 CHECK_CLOSE(1.366, pos[2], D);
 }
 
+TEST(TripleNodeAllDirs)
+{
+NODE *n = new NODE;
+NODE *na = new NODE;
+NODE *nb = new NODE;
+n->name = "node"; na->name = "node2"; nb->name = "node3"; 
+n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
+n->child = na; n->parent = NULL;
+n->euler[0] = 35;	n->euler[1] = 0;	n->euler[2] = 30;
+
+na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
+na->child = nb; 	na->parent = n;
+na->euler[0] = 30;	na->euler[1] = 0;	na->euler[2] = 10;
+
+nb->length[0] = 0; 	nb->length[1] = 1; nb->length[2] = 0;
+nb->child = NULL; 	nb->parent = na;
+nb->euler[0] = -40;	nb->euler[1] = 0;	nb->euler[2] = 70;
+
+
+float pos[3];
+pos[0] = 0; pos[1] = 0; pos[2] = 0;
+calcEndPos(nb, pos);
+CHECK_CLOSE(-1.734, pos[0], D);
+CHECK_CLOSE(1.095, pos[1], D);
+CHECK_CLOSE(1.362, pos[2], D);
+}
+
+TEST(TripleNodeBroke)
+{
+NODE *n = new NODE;
+NODE *na = new NODE;
+NODE *nb = new NODE;
+n->name = "node"; na->name = "node2"; nb->name = "node3"; 
+n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
+n->child = na; n->parent = NULL;
+n->euler[0] = 30;	n->euler[1] = 0;	n->euler[2] = 0;
+
+na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
+na->child = nb; 	na->parent = n;
+na->euler[0] = -60;	na->euler[1] = 0;	na->euler[2] = 0;
+
+nb->length[0] = 0; 	nb->length[1] = 1; nb->length[2] = 0;
+nb->child = NULL; 	nb->parent = na;
+nb->euler[0] = 0;	nb->euler[1] = 0;	nb->euler[2] = 60;
+
+
+float pos[3];
+pos[0] = 0; pos[1] = 0; pos[2] = 0;
+calcEndPos(nb, pos);
+CHECK_CLOSE(-0.866, pos[0], D);
+CHECK_CLOSE(2.165, pos[1], D);
+CHECK_CLOSE(-0.250, pos[2], D);
+}
 
 int main()
 {

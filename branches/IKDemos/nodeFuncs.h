@@ -135,7 +135,7 @@ void calcEndPos(NODE *end, float *pos)
 		if ((mx_el_eq(pRotMat, 0) == boolMatrix(3,3,1))){
 		   	pRotMatF = pRotMatT; 
 		} else {
-			pRotMatF = pRotMat *pRotMatT;
+			pRotMatF = pRotMatT *pRotMat;
 		}
 		pRotMat = pRotMatF;
 
