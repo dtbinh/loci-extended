@@ -313,7 +313,7 @@ bool BVHFormat::ImportData(const char *filename)
 
 void BVHFormat::calcFLSpace(NODE* curnode, int currentframe)
 {
-  std::cout << "Calculating flspace " << curnode->name;
+ // std::cout << "Calculating flspace " << curnode->name;
   float x,y,z;
 
   float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
@@ -321,14 +321,14 @@ void BVHFormat::calcFLSpace(NODE* curnode, int currentframe)
   euler[0] = curnode->euler[0] + curnode->freuler[currentframe][0];
   euler[1] = curnode->euler[1] + curnode->freuler[currentframe][1];
   euler[2] = curnode->euler[2] + curnode->freuler[currentframe][2];
-  std::cout << curnode->length[0] << ", " << curnode->length[1] << ", " << curnode->length[2] << std::endl;
-  std::cout << euler[0] << ", " << euler[1] << ", " << euler[2] << std::endl;
+  //std::cout << curnode->length[0] << ", " << curnode->length[1] << ", " << curnode->length[2] << std::endl;
+  //std::cout << euler[0] << ", " << euler[1] << ", " << euler[2] << std::endl;
   localPos(curnode->length, euler, pos);
   x = pos[0];
   y = pos[1];
   z = pos[2];
 
-  std::cout << x << ", " << y << ", " << z << std::endl;
+  //std::cout << x << ", " << y << ", " << z << std::endl;
   x += curnode->offset[0]; x+= curnode->froset[currentframe][0];
   y += curnode->offset[1]; x+= curnode->froset[currentframe][1];
   z += curnode->offset[2]; x+= curnode->froset[currentframe][2];

@@ -12,7 +12,7 @@
 #define XTRA 32
 #define YTRA 64
 #define ZTRA 128
-#define PI 3.141592
+#define PI 3.141592f
 
 typedef unsigned char BYTE;
 typedef unsigned long DWORD;
@@ -69,10 +69,6 @@ inline void SetupChildren(NODE* seg, int children)
   {
     seg->children = 0;
     seg->colour[0] = 0.8f;
-			//	  if (curnode->noofchildren-1 == 0)
-			 // {
-
-			  //}
   }
     //TODO Maybe Specify End Effector.
 }
@@ -118,6 +114,7 @@ inline float sqr(float a)
   return a*a;
 }
 
+#ifndef _WIN32
 #include <sys/time.h>
 inline unsigned GetTickCount()
 {
@@ -126,6 +123,13 @@ inline unsigned GetTickCount()
 
 	return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
+//#else
+//std::cout << "WINDOWS" << std::endl;
+//inline unsigned GetTickCount()
+//{
+//	return 0;
+//}
+#endif 
 
 struct MyPoint
 {

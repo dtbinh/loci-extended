@@ -78,7 +78,7 @@ void localPos(float* length, float* euler, float* pos)
 {
 	float start[3];
 	start[0] = length[0]; start[1] = length[1]; start[2] = length[2];
-	float res[3], resa[3], resb[3];
+	float res[3]; //, resa[3], resb[3];
 	if (euler[0])
 	{
 		localRotate(start, 0, euler[0], res);

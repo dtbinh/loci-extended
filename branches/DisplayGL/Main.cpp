@@ -9,14 +9,14 @@
 
 
 #include "Main.h"
-#include "resource.h"
+//#include "resource.h"
 #include "HTRFormat.h"
 #include "BVHFormat.h"
 #include <iostream>
 #include <cstring>
 #include <cstdio>
 
-
+float SPEED = 1.0f;
 /*
 
 BEGIN_MESSAGE_MAP(MainWnd, CWnd)
@@ -51,11 +51,12 @@ void drawPlane()
 {
 	glColor4f(0.6f, 0.8f, 0.8f, 0.9f);
 	
+	float s = 6;
 	glBegin(GL_QUADS);
-		glNormal3f(0, 1, 0); glVertex3f(-3, 0, -3);
-		glNormal3f(0, 1, 0); glVertex3f(3, 0, -3);
-		glNormal3f(0, 1, 0); glVertex3f(3, 0, 3);
-		glNormal3f(0, 1, 0); glVertex3f(-3, 0, 3);
+		glNormal3f(0, 1, 0); glVertex3f(-6, 0, -6);
+		glNormal3f(0, 1, 0); glVertex3f( 6, 0, -6);
+		glNormal3f(0, 1, 0); glVertex3f( 6, 0,  6);
+		glNormal3f(0, 1, 0); glVertex3f(-6, 0,  6);
 	glEnd();
 }
 
@@ -123,14 +124,15 @@ void display()
    // SetWindowText(buff);
 	glutSetWindowTitle(buff);
   }
-  else
-    ++frames;
+  else 
+  { ++frames; }
 
 	glutSwapBuffers();
 	  bBusy = false;
 
 	 // static long starttime = GetTickCount();
-  header.currentframe = ((GetTickCount() - starttime) * header.datarate / 1000) % header.noofframes;
+  header.currentframe = ((GetTickCount()/(int)SPEED - starttime) * header.datarate / 1000) % header.noofframes;
+
 }
 
 void mouseFunc(int button, int state, int x, int y)
@@ -198,13 +200,16 @@ int main (int argc, char **argv)
 
 
 	//TODO Get mocap filename from data
-	std::cout << argv[1] << std::endl;
-	if (argc == 2) { 
-		loadFilename(argv[1]);
-	} else {
-		loadFilename("");
-	}
-
+	char* filename = NULL;
+	for (int i=0; i < argc; i++)
+	{
+		if (argv[i] == "-f") { strcpy(filename,argv[i+1]); }
+		
+		
+		
+	} 
+	std::cout << "Loading Filename " << filename << std::endl;
+	loadFilename(filename);
 	glutMainLoop();
 }
 
@@ -238,13 +243,16 @@ void loadFilename (const char* m_lpCmdLine)
   // Setup the basic body structure ready for the system to build on it
   char mocapfilename[200];
   if (m_lpCmdLine[0])
+  {
     strcpy(mocapfilename,m_lpCmdLine);  // get file to load in from the command line parameters
+	yOffset = -3;
+  }
   else  // no specified file so use a default one
   {
     strcpy(mocapfilename, pathname);
   //  strcat(mocapfilename, "goal.htr");
     //strcat(mocapfilename, "catch.htr");
-    //strcat(mocapfilename, "dance01.bvh");
+     // strcat(mocapfilename, "dance01.bvh");
     strcat(mocapfilename, "vogueShort.bvh");
 
 	yOffset = 1;
