@@ -412,53 +412,123 @@ void CCD(NODE *cur)
 	calcEndPos(end, epos);
 	//std::cout << "e: " << end->name << " Pos = " << epos[0] << ", " << epos[1] << std::endl;
 	
+	//jpos = point of the joint's beginning
 	if (cur->parent) 
 	{
 	   	calcEndPos(cur->parent, jpos);
-   
-		//std::cout << "j: " << cur->parent->name << " Pos = " << jpos[0] << ", " << jpos[1] << std::endl;
 	}
 	end = oEnd;
 	//std::cout << "t: " << "Target Pos = " << IKPosX << ", " << IKPosY << std::endl;
 	//glPushMatrix();
-	//	glColor3f(1, 0, 0);
-	//	glTranslatef(epos[0], epos[1], 0);
+	//	glColor3f(0, 0, 1);
+	//	glTranslatef(jpos[0], jpos[1], jpos[2]);
 	//	glutSolidSphere(0.1, 5, 5);
+	//	glColor3f(1, 0, 0);
 	//glPopMatrix();
 
 
-	float ej[2]; ej[0] = epos[0] - jpos[0]; ej[1]= epos[1] - jpos[1];
-	float tj[2]; tj[0] = IKPosX - jpos[0];  tj[1] = IKPosY - jpos[1];
+	//ej = vector from joint's rotation point to end effectors end pos
+	float ej[3]; 
+	ej[0] = epos[0] - jpos[0];
+   	ej[1] = epos[1] - jpos[1];
+   	ej[2] = epos[2] - jpos[2];
+
+	//tj = vector from joint's rotation point to target
+	float tj[3];
+   	tj[0] = IKPosX - jpos[0];
+   	tj[1] = IKPosY - jpos[1];
+   	tj[2] = IKPosZ - jpos[2];
 
 	//std::cout << "ej: = " << ej[0] << ", " << ej[1] << std::endl;
 	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
 
-	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1];
-	float minejdottj = ej[0]*tj[1] - ej[1]*tj[0];
-	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1]);
-	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1]);
+	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1] + ej[2]*tj[2];
+	float minejdottj = ej[0]*tj[1] - ej[1]*tj[0] - ej[2]*tj[2];
+	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1] + ej[2]*ej[2]);
+	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1] + tj[2]*tj[2]);
 
 	if (tjSqr < 0.05) { return; }
 	float cosA = ejdottj/(ejSqr*tjSqr);
 	float sinA = minejdottj/(ejSqr*tjSqr);
+
+	//Axis = axis to rotate around. CrossProduct of ej+tj
+	float axis[3];
+	axis[0] = (ej[1]*tj[2])-(ej[2]*tj[1]);
+	axis[1] = (ej[2]*tj[0])-(ej[0]*tj[2]);
+	axis[2] = (ej[0]*tj[1])-(ej[1]*tj[0]);
+
+	//Normalise Rotation axis
+	float lenAxis = sqrt((axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]));
+	axis[0] /= lenAxis;
+	axis[1] /= lenAxis;
+	axis[2] /= lenAxis;
 
 	//Limit cosA - eliminates rounding errors.
 	cosA = cosA>-1?cosA:-1;
 	cosA = cosA<1?cosA:1;
 	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
-	if (rotAng > 10) { rotAng = 10; }
+	//if (rotAng > 10) { rotAng = 10; }
 	if (sinA < 0) { rotAng = -rotAng; }
 	rotAng *= cur->weight;
-	cur->euler[0] += radDeg(rotAng);
+
+	//Rotate by acos(cosA) around axis
+	//Convert to Euler Rotations angles
+	//
+	Matrix axisMat = Matrix(3,3);
+	axisMat(0,0) = 1+ (1-cos(rotAng))*(axis[0]*axis[0]-1);
+	axisMat(0,1) = -axis[2]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[1];
+	axisMat(0,2) = axis[1]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[2];
+
+	axisMat(1,0) = axis[2]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[1];
+	axisMat(1,1) = 1 + (1-cos(rotAng))*(axis[1]*axis[1]-1);
+	axisMat(1,2) = -axis[0]*sin(rotAng)+(1-cos(rotAng))*axis[1]*axis[2];
+	
+	axisMat(2,0) = -axis[1]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[2];
+	axisMat(2,1) = axis[0]*sin(rotAng)+(1-cos(rotAng))*axis[1]*axis[2];
+	axisMat(2,2) = 1 + (1-cos(rotAng))*(axis[2]*axis[2]-1);
+
+	float x, y, z;
+	if (axisMat(1,0) > 0.998)
+	{
+		std::cout << "sing NORTH" << std::endl;
+		 //Singluarity at north Pole
+		 y = atan2(axisMat(0,2), axisMat(2,2));
+		 x = PI/2;
+		 z = 0;
+	} else if (axisMat(1,0) < -0.998)
+	{
+		std::cout << "sing SOUTH" << std::endl;
+		//Singularit at south pole
+		y = atan2(axisMat(0,2), axisMat(2,2));
+		x = -PI/2;
+		z = 0;
+	} else {
+		y = atan2(-axisMat(2,0), axisMat(0,0));
+		x = atan2(-axisMat(1,2), axisMat(1,1));
+		z = asin(-axisMat(1,0));
+	}
+
+	cur->euler[0] += radDeg(x);
+	cur->euler[1] += radDeg(y);
+	cur->euler[2] += radDeg(z);
 
 	if (doLimit)
 	{
-		while (cur->euler[0] < -80 ) { cur->euler[0] = -80; }
-		while (cur->euler[0] >  80 ) { cur->euler[0] =  80; }
+		float lim = 40;
+		while (cur->euler[0] < -lim ) { cur->euler[0] = -lim; }
+		while (cur->euler[0] >  lim ) { cur->euler[0] =  lim; }
+
+		while (cur->euler[1] < -lim ) { cur->euler[1] = -lim; }
+		while (cur->euler[1] < -lim ) { cur->euler[1] = -lim; }
+
+		while (cur->euler[2] >  lim ) { cur->euler[2] =  lim; }
+		while (cur->euler[2] >  lim ) { cur->euler[2] =  lim; }
 	} else {
 		//Normalise to between +- 360
 		if (cur->euler[0] > 2*PI) { cur->euler[0] -= 2*PI; } else if (cur->euler[0] < -2*PI) { cur->euler[0] += 2*PI; }
+		if (cur->euler[1] > 2*PI) { cur->euler[1] -= 2*PI; } else if (cur->euler[1] < -2*PI) { cur->euler[1] += 2*PI; }
+		if (cur->euler[2] > 2*PI) { cur->euler[2] -= 2*PI; } else if (cur->euler[2] < -2*PI) { cur->euler[2] += 2*PI; }
 	}
 
 }
@@ -489,6 +559,7 @@ void display(void)
 
 	//std::cout << "EVALUATEING CHAIN" << std::endl;
 
+	/*
 	for (int i=0; i<nooftests; i++)
 	{
 
@@ -507,30 +578,31 @@ void display(void)
 			evaluateChain(testList[i]);
 		}
 	}
+	*/
 	
-	//evaluateChain(nodeList[0]);
+	evaluateChain(nodeList[0]);
 
-	/*
+	
 	if (doJac)
 	{
 		//jacobian(nodeList[0]);
-	} else if (false) {
+	} else {
 		NODE *node = getEndEffector(nodeList[0]);
 		float pos[3];
 		while (node)
 		{
-			pos[0] = 0; pos[1] = 0; pos[2] = 0;
-			calcEndPos(node, pos);
-			glPushMatrix();
-			 glTranslatef(pos[0], pos[1], pos[2]);
-			 glutSolidSphere(0.1, 5, 5);
-			glPopMatrix();
-			//CCD(node);
+	//		pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	//		calcEndPos(node, pos);
+	//		glPushMatrix();
+	//		 glTranslatef(pos[0], pos[1], pos[2]);
+	//		 glutSolidSphere(0.1, 5, 5);
+	//		glPopMatrix();
+			CCD(node);
 			node = node->parent;
 		}
 
 	}
-	*/
+	
 
 
 	float fs = 4;
