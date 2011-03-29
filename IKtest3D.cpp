@@ -405,6 +405,7 @@ void jacobian(NODE *node)
 void CCD(NODE *cur)
 {
 	if (!cur) { return; }
+	std::cout << cur->name << std::endl;
 	NODE *end = getEndEffector(nodeList[0]);
 	NODE *oEnd = end;
 	float epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
@@ -443,7 +444,7 @@ void CCD(NODE *cur)
 	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
 
 	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1] + ej[2]*tj[2];
-	float minejdottj = ej[0]*tj[1] - ej[1]*tj[0] - ej[2]*tj[2];
+	float minejdottj = - ej[0]*tj[1] - ej[1]*tj[0] - ej[2]*tj[2];
 	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1] + ej[2]*ej[2]);
 	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1] + tj[2]*tj[2]);
 
@@ -463,14 +464,21 @@ void CCD(NODE *cur)
 	axis[1] /= lenAxis;
 	axis[2] /= lenAxis;
 
+	glPushMatrix();
+		glTranslatef(jpos[0], jpos[1], jpos[2]);
+		glBegin(GL_LINE);
+			glVertex3f(-axis[0]/4, -axis[1]/4, -axis[2]/4);
+			glVertex3f( axis[0]/4,  axis[1]/4,  axis[2]/4);
+		glEnd();
+	glPopMatrix();
+
 	//Limit cosA - eliminates rounding errors.
 	cosA = cosA>-1?cosA:-1;
 	cosA = cosA<1?cosA:1;
 	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
-	//if (rotAng > 10) { rotAng = 10; }
 	if (sinA < 0) { rotAng = -rotAng; }
-	rotAng *= cur->weight;
+	//rotAng *= cur->weight;
 
 	//Rotate by acos(cosA) around axis
 	//Convert to Euler Rotations angles
@@ -509,26 +517,27 @@ void CCD(NODE *cur)
 		z = asin(-axisMat(1,0));
 	}
 
+
 	cur->euler[0] += radDeg(x);
 	cur->euler[1] += radDeg(y);
 	cur->euler[2] += radDeg(z);
 
 	if (doLimit)
 	{
-		float lim = 40;
+		float lim = 80;
 		while (cur->euler[0] < -lim ) { cur->euler[0] = -lim; }
 		while (cur->euler[0] >  lim ) { cur->euler[0] =  lim; }
 
 		while (cur->euler[1] < -lim ) { cur->euler[1] = -lim; }
-		while (cur->euler[1] < -lim ) { cur->euler[1] = -lim; }
+		while (cur->euler[1] >  lim ) { cur->euler[1] =  lim; }
 
-		while (cur->euler[2] >  lim ) { cur->euler[2] =  lim; }
+		while (cur->euler[2] < -lim ) { cur->euler[2] = -lim; }
 		while (cur->euler[2] >  lim ) { cur->euler[2] =  lim; }
 	} else {
 		//Normalise to between +- 360
-		if (cur->euler[0] > 2*PI) { cur->euler[0] -= 2*PI; } else if (cur->euler[0] < -2*PI) { cur->euler[0] += 2*PI; }
-		if (cur->euler[1] > 2*PI) { cur->euler[1] -= 2*PI; } else if (cur->euler[1] < -2*PI) { cur->euler[1] += 2*PI; }
-		if (cur->euler[2] > 2*PI) { cur->euler[2] -= 2*PI; } else if (cur->euler[2] < -2*PI) { cur->euler[2] += 2*PI; }
+		if (cur->euler[0] > 360) { cur->euler[0] -= 360; } else if (cur->euler[0] < -360) { cur->euler[0] += 360; }
+		if (cur->euler[1] > 360) { cur->euler[1] -= 360; } else if (cur->euler[1] < -360) { cur->euler[1] += 360; }
+		if (cur->euler[2] > 360) { cur->euler[2] -= 360; } else if (cur->euler[2] < -360) { cur->euler[2] += 360; }
 	}
 
 }
@@ -602,8 +611,6 @@ void display(void)
 		}
 
 	}
-	
-
 
 	float fs = 4;
 	glEnable(GL_BLEND);
@@ -634,6 +641,7 @@ void display(void)
 	glDisable(GL_BLEND);
 
 	glutSwapBuffers();
+	sleep(0.5);
 }
 
 
