@@ -23,7 +23,7 @@ GLfloat blankMaterial[] = { 0.0, 0.0, 0.0};
 GLfloat mShininess[] = {128};
 
 int noofnodes = 0;
-int nooftargets = 0;
+//int nooftargets = 0;
 NODE *nodeList[10];
 TARGET *targetList[10];
 
@@ -117,6 +117,75 @@ void increaseChildren(NODE* seg, int noofchildren)
 }
 
 void setupChain()
+{
+std::cout << "Setting up Chain" << std::endl;
+	NODE *n1 = new NODE;
+	//NODE *n2 = new NODE;
+	//NODE *n3 = new NODE;
+	NODE *n4 = new NODE;
+	//NODE *n3b = new NODE;
+	NODE *n4b = new NODE;
+
+	n1->noofchildren = 2; n1->target = NULL;
+	//n2->noofchildren = 2; n2->target = NULL;
+	//n3->noofchildren = 1; n3->target = NULL;
+	//n3b->noofchildren = 1; n3b->target = NULL;
+	n4->noofchildren = 0; n4->target = NULL;
+	n4b->noofchildren = 0; n4b->target = NULL;
+
+	std::cout << "Setting up links" << std::endl;
+
+	increaseChildren(n1, n1->noofchildren);
+	//increaseChildren(n2, n2->noofchildren);
+	//increaseChildren(n3, n3->noofchildren);
+	//increaseChildren(n3b, n3b->noofchildren);
+	increaseChildren(n4, n4->noofchildren);
+	increaseChildren(n4b, n4b->noofchildren);
+
+	n1->name = "root"; n1->child[0] = n4; n1->child[1] = n4b; n1->parent = NULL;
+	//n3->name = "upper"; n3->child[0] = n4; n3->parent = n1;
+	//n3b->name = "LUPPER"; n3b->child[0] = n4b; n3b->parent = n2;
+	n4->name = "hand";  n4->child[0] = NULL; n4->parent = n1; n4->target = targetList[0];
+	n4b->name = "LHAND";  n4b->child[0] = NULL; n4b->parent = n1; n4b->target = targetList[1];
+
+
+	std::cout << "Setting chain Lens" << std::endl;
+
+	n1->length[0] = 0; n1->length[1] = 1;  
+	//n2->length[0] = 0; n2->length[1] = 1;  
+	//n3->length[0] = 0; n3->length[1] = 1;  
+	//n3b->length[0] = 0; n3b->length[1] = 1;  
+	n4->length[0] = 0; n4->length[1] = 1;  
+	n4b->length[0] = 0; n4b->length[1] = 1;  
+	//std::cout << "n1 Setup" << std::endl;
+	//
+	/*
+	n1->euler = 45;
+	n2->euler = 30;
+	n3->euler = -30;
+	n4->euler = 30;
+	*/
+
+	n1->euler[0] = 0;	n1->euler[1] = 0;	n1->euler[2] = 0; 
+	//n2->euler[0] = 0;	n2->euler[1] = 0;	n2->euler[2] = 0; 
+	//n3->euler[0] = 0;	n3->euler[1] = 0;	n3->euler[2] = 0; 
+	//n3b->euler[0] = 0;	n3b->euler[1] = 0;	n3b->euler[2] = 0; 
+	n4->euler[0] = 0;	n4->euler[1] = 0;	n4->euler[2] = 0; 
+	n4b->euler[0] = 0;	n4b->euler[1] = 0;	n4b->euler[2] = 0; 
+	
+	nodeList[noofnodes++] = n1; 
+	//nodeList[noofnodes++] = n2; 
+	//nodeList[noofnodes++] = n3; 
+	//nodeList[noofnodes++] = n3b;
+	nodeList[noofnodes++] = n4; 
+	nodeList[noofnodes++] = n4b;
+	//std::cout << "LEaving Exit" << std::endl;
+
+	return;
+
+}
+
+void setupChainLonger()
 {
 	std::cout << "Setting up Chain" << std::endl;
 	NODE *n1 = new NODE;
@@ -253,6 +322,7 @@ void calcEndPos(NODE *end, float *pos)
 }
 */
 
+/*
 void getTarget(NODE *cur, int *nooftargets, TARGET **retList)
 {
 	//std::cout << "G-t for " << cur->name << " - " << std::flush;
@@ -281,7 +351,9 @@ void getTarget(NODE *cur, int *nooftargets, TARGET **retList)
 	}
 	//else { return NULL;	}
 }
+*/
 
+/*
 void CCD(NODE *cur)
 {
 	std::cout << cur->name << std::endl;
@@ -439,7 +511,7 @@ void CCD(NODE *cur)
 	if (cur->euler[2] < -80) { cur->euler[2] = -80; }
 
 }
-
+*/
 void display(void)
 {
 	//keyOperations();
@@ -512,11 +584,11 @@ void display(void)
 	}
 	*/
 	//exit(0);
-	CCD(nodeList[5]);
-	CCD(nodeList[4]);
-	CCD(nodeList[3]);
-	CCD(nodeList[2]);
-	CCD(nodeList[1]); 
+	//CCD(nodeList[5]);
+	//CCD(nodeList[4]);
+	//CCD(nodeList[3]);
+	//CCD(nodeList[2]);
+	//CCD(nodeList[1]); 
 	CCD(nodeList[0]);
 	std::cout << std::endl;
 

@@ -13,7 +13,7 @@ bool* keySpecialStates = new bool[256];
 
 
 bool doJac = false;
-bool doLimit = true;
+bool doLimit = false;
 
 float atX = 0, atZ = 0; float atY = 2;
 float eyeX = -4; float eyeY = 2.1f; float eyeZ = 7;
@@ -444,13 +444,12 @@ void CCD(NODE *cur)
 	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
 
 	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1] + ej[2]*tj[2];
-	float minejdottj = - ej[0]*tj[1] - ej[1]*tj[0] - ej[2]*tj[2];
+	float minejdottj = - ej[0]*tj[0] - ej[1]*tj[1] - ej[2]*tj[2];
 	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1] + ej[2]*ej[2]);
 	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1] + tj[2]*tj[2]);
 
 	if (tjSqr < 0.05) { return; }
 	float cosA = ejdottj/(ejSqr*tjSqr);
-	float sinA = minejdottj/(ejSqr*tjSqr);
 
 	//Axis = axis to rotate around. CrossProduct of ej+tj
 	float axis[3];
@@ -460,6 +459,9 @@ void CCD(NODE *cur)
 
 	//Normalise Rotation axis
 	float lenAxis = sqrt((axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]));
+	float sinA = (axis[0]+axis[1]+axis[2])/(ejSqr*tjSqr);
+	std::cout << "Sins " <<  sinA << std::endl;
+
 	axis[0] /= lenAxis;
 	axis[1] /= lenAxis;
 	axis[2] /= lenAxis;
@@ -478,6 +480,8 @@ void CCD(NODE *cur)
 	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
 	if (sinA < 0) { rotAng = -rotAng; }
+	//if (axis[2] < 0) { rotAng = -rotAng; }
+	std::cout << "RotAng: " << radDeg(rotAng) << std::endl;
 	//rotAng *= cur->weight;
 
 	//Rotate by acos(cosA) around axis
@@ -497,6 +501,7 @@ void CCD(NODE *cur)
 	axisMat(2,2) = 1 + (1-cos(rotAng))*(axis[2]*axis[2]-1);
 
 	float x, y, z;
+	
 	if (axisMat(1,0) > 0.998)
 	{
 		std::cout << "sing NORTH" << std::endl;
@@ -524,7 +529,7 @@ void CCD(NODE *cur)
 
 	if (doLimit)
 	{
-		float lim = 80;
+		float lim = 180;
 		while (cur->euler[0] < -lim ) { cur->euler[0] = -lim; }
 		while (cur->euler[0] >  lim ) { cur->euler[0] =  lim; }
 
@@ -539,6 +544,8 @@ void CCD(NODE *cur)
 		if (cur->euler[1] > 360) { cur->euler[1] -= 360; } else if (cur->euler[1] < -360) { cur->euler[1] += 360; }
 		if (cur->euler[2] > 360) { cur->euler[2] -= 360; } else if (cur->euler[2] < -360) { cur->euler[2] += 360; }
 	}
+
+	std::cout << "Eulers: " << cur->euler[0] << " " << cur->euler[1] << " " <<cur->euler[2] << std::endl; 
 
 }
 
