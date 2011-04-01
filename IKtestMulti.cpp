@@ -15,6 +15,7 @@ const float PI = 3.14159265f;
 float atX = 0, atZ = 0; float atY = 2;
 float eyeX = 0; float eyeY = 2.1f; float eyeZ = 7;
 
+bool doLimits = true;
 
 GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0};
 GLfloat whiteSpecularLight[] = { 1.0, 1.0, 1.0};
@@ -93,6 +94,8 @@ void keyPressed (unsigned char key, int x, int y) {
 	if (keyStates['k'])  	{ targetList[0]->pos[1] -= d; }
 	if (keyStates['i'])   	{ targetList[0]->pos[1] += d; }
 
+	if (keyStates[' '])		{ doLimits ^= 1; }
+
 }
 void keyUp (unsigned char key, int x, int y) { keyStates[key] = false; }
 
@@ -139,45 +142,61 @@ void increaseChildren(NODE* seg, int noofchildren)
 void setupChain()
 {
 	std::cout << "Setting up Chain" << std::endl;
+	NODE *n0 = new NODE;
 	NODE *n1 = new NODE;
 	NODE *n2 = new NODE;
 	NODE *n3 = new NODE;
 	NODE *n4 = new NODE;
-	NODE *n3b = new NODE;
 	NODE *n4b = new NODE;
+	NODE *n3b = new NODE;
+	NODE *n5 = new NODE;
+	//NODE *n5b = new NODE;
 
-	n1->noofchildren = 1; n1->target = NULL;
-	n2->noofchildren = 2; n2->target = NULL;
+	n0->noofchildren = 1; n0->target = NULL;
+	n1->noofchildren = 2; n1->target = NULL;
+	n2->noofchildren = 1; n2->target = NULL;
 	n3->noofchildren = 1; n3->target = NULL;
 	n3b->noofchildren = 1; n3b->target = NULL;
-	n4->noofchildren = 0; n4->target = NULL;
+	n4->noofchildren = 1; n4->target = NULL;
 	n4b->noofchildren = 0; n4b->target = NULL;
+	n5->noofchildren = 0; n5->target = NULL;
+	//n5b->noofchildren = 0; n5b->target = NULL;
 
 	std::cout << "Setting up links" << std::endl;
 
+	increaseChildren(n0, n0->noofchildren);
 	increaseChildren(n1, n1->noofchildren);
 	increaseChildren(n2, n2->noofchildren);
 	increaseChildren(n3, n3->noofchildren);
 	increaseChildren(n3b, n3b->noofchildren);
 	increaseChildren(n4, n4->noofchildren);
 	increaseChildren(n4b, n4b->noofchildren);
+	increaseChildren(n5, n5->noofchildren);
+	//increaseChildren(n5b, n5b->noofchildren);
 
-	n1->name = "root"; n1->child[0] = n2; n1->parent = NULL;
-	n2->name = "lower"; n2->child[0] = n3; n2->child[1] = n3b; n2->parent = n1;
+	n0->name = "preRoot"; n0->child[0] = n1; n1->parent = NULL;
+	n1->name = "root"; n1->child[0] = n2; n1->child[1] = n3b; n1->parent = n0;
+	n2->name = "lower"; n2->child[0] = n3; n2->parent = n1;
 	n3->name = "upper"; n3->child[0] = n4; n3->parent = n2;
-	n3b->name = "LUPPER"; n3b->child[0] = n4b; n3b->parent = n2;
-	n4->name = "hand";  n4->child[0] = NULL; n4->parent = n3; n4->target = targetList[0];
-	n4b->name = "LHAND";  n4b->child[0] = NULL; n4b->parent = n3b; n4b->target = targetList[1];
+	n3b->name = "LUPPER"; n3b->child[0] = n4b; n3b->parent = n1;
+	n4->name = "hand";  n4->child[0] = n5; n4->parent = n3; 
+	n4b->name = "LHAND";  n4b->child[0] = NULL; n4b->parent = n3b;
+	n4b->target = targetList[1];
 
+	n5->name = "tip";  n5->child[0] = NULL; n5->parent = n4; n5->target = targetList[0];
+	//n5b->name = "LTIP";  n5b->child[0] = NULL; n5b->parent = n4b; n5b->target = targetList[1];
 
 	std::cout << "Setting chain Lens" << std::endl;
 
+	n0->length[0] = 0; n0->length[1] = 1;  
 	n1->length[0] = 0; n1->length[1] = 1;  
 	n2->length[0] = 0; n2->length[1] = 1;  
 	n3->length[0] = 0; n3->length[1] = 1;  
 	n3b->length[0] = 0; n3b->length[1] = 1;  
 	n4->length[0] = 0; n4->length[1] = 1;  
 	n4b->length[0] = 0; n4b->length[1] = 1;  
+	n5->length[0] = 0; n5->length[1] = 1;  
+	//n5b->length[0] = 0; n5b->length[1] = 1;  
 	//std::cout << "n1 Setup" << std::endl;
 	//
 	/*
@@ -187,16 +206,21 @@ void setupChain()
 	n4->euler = 30;
 	*/
 
+	n0->euler = 0;
 	n1->euler = 0; n2->euler = 0;
 	n3->euler = 0; n3b->euler = 0;
 	n4->euler = 0; n4b->euler = 0;
+	n5->euler = 0; //n5b->euler = 0;
 	
+	nodeList[noofnodes++] = n0; 
 	nodeList[noofnodes++] = n1; 
 	nodeList[noofnodes++] = n2; 
 	nodeList[noofnodes++] = n3; 
 	nodeList[noofnodes++] = n3b;
 	nodeList[noofnodes++] = n4; 
 	nodeList[noofnodes++] = n4b;
+	nodeList[noofnodes++] = n5; 
+	//nodeList[noofnodes++] = n5b;
 	//std::cout << "LEaving Exit" << std::endl;
 
 	return;
@@ -341,11 +365,13 @@ void CCD(NODE *cur)
 		tj[0] /= nooftar; 
 		tj[1] /= nooftar; 
 
+		/*
 		glColor3f(1.0f/nooftar, 0, 0 );
 		glPushMatrix();
 			glTranslatef(tj[0], tj[1], 0);
 			glutWireSphere(0.1f, 5, 5);
 		glPopMatrix();
+		*/
 		tj[0] -= jpos[0]; 
 		tj[1] -= jpos[1];
 
@@ -378,10 +404,15 @@ void CCD(NODE *cur)
 	cur->euler += radDeg(rotAng);
 
 	//Normalise to between +- 360
-	if (cur->euler > 360) { cur->euler -= 360; } else if (cur->euler < -360) { cur->euler += 360; }
 
-	if (cur->euler > 80) { cur->euler = 80; }
-	if (cur->euler < -80) { cur->euler = -80; }
+	if (doLimits)
+	{
+		if (cur->euler > 80) { cur->euler = 80; }
+		if (cur->euler < -80) { cur->euler = -80; }
+	} else {
+
+		if (cur->euler > 360) { cur->euler -= 360; } else if (cur->euler < -360) { cur->euler += 360; }
+	}
 
 }
 
@@ -457,6 +488,9 @@ void display(void)
 	}
 	*/
 	//exit(0);
+	//CCD(nodeList[8]);
+	CCD(nodeList[7]);
+	CCD(nodeList[6]);
 	CCD(nodeList[5]);
 	CCD(nodeList[4]);
 	CCD(nodeList[3]);
@@ -511,7 +545,7 @@ int main (int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_DEPTH);
 	glutInitWindowSize(500, 500);
-	glutCreateWindow("First OpenGL Window");
+	glutCreateWindow("IK Demo - Y Shaped Chain");
 	//glLineWidth(6);
 	
 	setupTargets();
