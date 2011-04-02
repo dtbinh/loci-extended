@@ -75,15 +75,19 @@ void setupChain(int);
 void keyPressed (unsigned char key, int x, int y) { 
 	switch (key)
 	{
-		case 'Q':
+		case 'Q': case 0x1b:
 			std::cout << "Quitting" << std::endl;
 			exit(0);
 			break;
 		case ' ':
 			doJac ^= 1;
+			if (doJac) { std::cout << "Using Jacobian" << std::endl; } 
+			else { std::cout << "Using CCD" << std::endl; } 
 			break;
 		case 'l':
 			doLimit ^= 1;
+			if (doLimit) { std::cout << "Limit On" << std::endl; } 
+			else { std::cout << "Limit Off" << std::endl; } 
 			break;
 		case '1':
 			setupChain(1);
@@ -280,12 +284,22 @@ void calcEndPos(NODE *end, double *pos)
 
 	return;
 }
-
+float distToTarget(NODE *node)
+{
+	float a, b, c;
+	double pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(node, pos);
+	b = pos[0]-IKPosX;
+	c = pos[1]-IKPosY;
+	a = sqrt(b*b + c*c);
+	return a;
+}
 void transpose(float*, int, int, float*);
 bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
-void jacobian(NODE *node)
+
+bool jacobian(NODE *node)
 {
-	float errorTolerance = 30; 
+	float errorTolerance = 10; 
 	float closeTol = 0.05;
 	ColumnVector TH = ColumnVector(noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
@@ -301,8 +315,7 @@ void jacobian(NODE *node)
 	while (node)
 	{
 		TH(m) = node->euler;
-		//W(m,m) = node->weight;
-		W(m) = node->weight;
+		//W(m) = node->weight;
 
 		double epos[2]; epos[0] = 0; epos[1] = 0;
 		double ppos[2]; ppos[0] = 0; ppos[1] = 0;
@@ -318,13 +331,16 @@ void jacobian(NODE *node)
 		//if (sqrt((dX(0,m)*dX(0,m)) + (dX(1,m)*dX(1,m))) < closeTol) { return; }
 
 		//S = endPosition of current node
+		/*
 		S(0, m) = epos[0];
 		S(1, m) = epos[1];
 		S(2, m) = 0;
+		 
+		*/
 
 		//Fake Cross product to fill the Jacobian
-		J(0,m) = (IKPosY - S(1, m)) ;
-		J(1,m) = -(IKPosX - S(0, m)) ;
+		J(0,m) = -(endpos[1] - epos[1]) ;
+		J(1,m) =  (endpos[0] - epos[0]) ;
 		J(2, m) = 0;
 
 		//std::cout << "V" << V << std::endl; 
@@ -336,24 +352,30 @@ void jacobian(NODE *node)
 	}
 
 	//Calculate Distance of end effector to Target. If close, Stop.
-	std::cout << "dist = " << sqrt((dX(0, 0)*dX(0,0)) + (dX(1,0)*dX(1,0))) << std::endl;
-	if (sqrt((dX(0,0)*dX(0,0)) + (dX(1,0)*dX(1,0))) < closeTol) { return; }
+	//std::cout << "dist = " << sqrt((dX(0, 0)*dX(0,0)) + (dX(1,0)*dX(1,0))) << std::endl;
+	//std::cout << "dist = " << distToTarget(end) << std::endl;
+	//if (sqrt((dX(0,0)*dX(0,0)) + (dX(1,0)*dX(1,0))) < closeTol) { return true; }
+	if (distToTarget(end) < closeTol) {
+		 return true;
+	}
 	
 	
 	
 	//If error is small, stop iterating
 	//If large, halve dX
+	Matrix JJ = J*J.pseudo_inverse();
 	Matrix error = Matrix(noofnodes, noofnodes);
+	error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
 	{
-		error = (identity_matrix(2,2) - (J*J.pseudo_inverse())) * dX;
+		//std::cout << "Error " << sqrt(error.sumsq().sum(1)(0, 0)) << std::endl;
+		error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
 
 	ColumnVector NewTH = ColumnVector(noofnodes);
 	NewTH = TH + ((J.pseudo_inverse()*dX).column(0));
 	
-
 	//Update node angles.
 	node = startNode;
 	for (int i =0; i<NewTH.length(); i++)	
@@ -361,12 +383,20 @@ void jacobian(NODE *node)
 		if (node != NULL)
 		{
 			node->euler = NewTH(i);
-			while (node->euler > 360) { node->euler -= 360; }
-			while (node->euler < -360) { node->euler += 360; }
+			if (doLimit)
+			{
+				if (node->euler < -80 ) { node->euler = -80; }
+				if (node->euler >  80 ) { node->euler =  80; }
+			} else {
+				//Normalise to between +- 360
+				while (node->euler > 360) { node->euler -= 360; }
+				while (node->euler < -360) { node->euler += 360; }
+			}
 			node = node->child;
 		} else { std::cout << "Error: Array too long for chain" << std::endl; }
 	}
-	return;
+	//std::cout << "Nodes Updated" << std::endl;
+	return false;
 }
 
 void CCD(NODE *cur)
@@ -430,6 +460,8 @@ void CCD(NODE *cur)
 
 }
 
+
+
 void display(void)
 {
 	//keyOperations();
@@ -460,10 +492,17 @@ void display(void)
 
 	if (doJac)
 	{
-		jacobian(nodeList[0]);
+		bool c = false;
+		int count = 0;
+		while ((count < 20) && (c == false))
+		{
+			count++;
+			c = jacobian(nodeList[0]);
+		}
 	} else {
 		NODE *node = getEndEffector(nodeList[0]);
-		while (node)
+		NODE *enode = node;
+		while ((node) && (distToTarget(enode) > 0.05))
 		{
 			CCD(node);
 			node = node->parent;
