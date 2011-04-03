@@ -314,7 +314,7 @@ void setupChain()
 float distToTarget(NODE *node)
 {
 	float a,b,c,d;
-	double pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
 	calcEndPos(node, pos);
 	b = pos[0]-IKPosX;
 	c = pos[1]-IKPosY;
@@ -327,7 +327,7 @@ float distToTarget(NODE *node)
 void transpose(float*, int, int, float*);
 bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
 
-void jacobian(NODE *node)
+bool jacobian(NODE *node)
 {
 	float errorTolerance = 10; 
 	float closeTol = 0.05;
@@ -344,13 +344,13 @@ void jacobian(NODE *node)
 	int m = 0;
 	while (node)
 	{
-		TH(m) = node->euler;
+		TH(m) = node->euler[0];
 		//W(m,m) = node->weight;
-		W(m) = node->weight;
+		//W(m) = node->weight;
 
-		double epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
-		double ppos[3]; ppos[0] = 0; ppos[1] = 0; ppos[2] = 0;
-		double endpos[3]; endpos[0] = 0; endpos[1] = 0; endpos[2] = 0;
+		float epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
+		float ppos[3]; ppos[0] = 0; ppos[1] = 0; ppos[2] = 0;
+		float endpos[3]; endpos[0] = 0; endpos[1] = 0; endpos[2] = 0;
 		calcEndPos(node, epos);
 		if (node->parent) { calcEndPos(node->parent, ppos); }
 		calcEndPos(end, endpos);
@@ -360,10 +360,25 @@ void jacobian(NODE *node)
 		dX(1, m) = IKPosY - endpos[1];
 		dX(2, m) = IKPosZ - endpos[2];
 		
+		float ej[3]; float tj[3];
+		ej[0] = endpos[0] - ppos[0];
+		ej[1] = endpos[1] - ppos[1];
+		ej[2] = endpos[2] - ppos[2];
+
+		tj[0] = IKPosX - ppos[0];
+		tj[1] = IKPosY - ppos[1];
+		tj[2] = IKPosZ - ppos[2];
+
+
+		float axis[3];
+		axis[0] = (ej[1]*tj[2]) - (ej[2]*tj[1]);
+		axis[1] = (ej[2]*tj[0]) - (ej[0]*tj[2]);
+		axis[2] = (ej[0]*tj[1]) - (ej[1]*tj[0]);
+
 		//Fake Cross product to fill the Jacobian
-		J(0,m) = -(endpos[1] - epos[1]) ;
-		J(0,m) = (endpos[0] - epos[0]) ;
-		J(2, m) = (endpos[2] - epos[2]);
+		J(0, m) = (ej[1]*axis[2]) - (ej[2]*axis[1]);
+		J(1, m) = (ej[2]*axis[0]) - (ej[0]*axis[2]);
+		J(2, m) = (ej[0]*axis[1]) - (ej[1]*axis[0]);
 
 		//std::cout << "V" << V << std::endl; 
 		//std::cout << "J" << J << std::endl; 
@@ -400,13 +415,13 @@ void jacobian(NODE *node)
 	{
 		if (node != NULL)
 		{
-			node->euler = NewTH(i);
-			while (node->euler > 360) { node->euler -= 360; }
-			while (node->euler < -360) { node->euler += 360; }
+			node->euler[0] = NewTH(i);
+			while (node->euler[0] > 360) { node->euler[0] -= 360; }
+			while (node->euler[0] < -360) { node->euler[0] += 360; }
 			node = node->child;
 		} else { std::cout << "Error: Array too long for chain" << std::endl; }
 	}
-	return;
+	return false;
 }
 
 
@@ -609,7 +624,7 @@ void display(void)
 	
 	if (doJac)
 	{
-		//jacobian(nodeList[0]);
+		jacobian(nodeList[0]);
 	} else {
 		NODE *node = getEndEffector(nodeList[0]);
 		float pos[3];
