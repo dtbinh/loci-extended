@@ -216,7 +216,7 @@ void setupChain()
 	n3->name = "upper"; n3->child = n4; n3->parent = n2;
 	n4->name = "hand";  n4->child = NULL; n4->parent = n3;
 
-	n1->length[0] = 0; n1->length[1] = 1; n1->weight = 1;
+	n1->length[0] = 0; n1->length[1] = 1; n1->weight = 0.3;
 	n2->length[0] = 0; n2->length[1] = 1; n2->weight = 1;
 	n3->length[0] = 0; n3->length[1] = 1; n3->weight = 1;
 	n4->length[0] = 0; n4->length[1] = 1; n4->weight = 1;
@@ -304,8 +304,6 @@ bool jacobian(NODE *node)
 	ColumnVector TH = ColumnVector(noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
 	ColumnVector W = ColumnVector(noofnodes);
-	Matrix S = Matrix(3, noofnodes);
-	Matrix V = Matrix(3, noofnodes);
 	Matrix J = Matrix(3, noofnodes);
 	Matrix dX = Matrix(3, noofnodes);
 	NODE *startNode= node;
@@ -315,7 +313,7 @@ bool jacobian(NODE *node)
 	while (node)
 	{
 		TH(m) = node->euler;
-		//W(m) = node->weight;
+		W(m) = node->weight;
 
 		double epos[2]; epos[0] = 0; epos[1] = 0;
 		double ppos[2]; ppos[0] = 0; ppos[1] = 0;
@@ -327,24 +325,12 @@ bool jacobian(NODE *node)
 		//dX = distance from target to end effector
 		dX(0, m) = IKPosX - endpos[0];   //Minimise dX
 		dX(1, m) = IKPosY - endpos[1];
-		dX(2, m) = 0;
-		//if (sqrt((dX(0,m)*dX(0,m)) + (dX(1,m)*dX(1,m))) < closeTol) { return; }
-
-		//S = endPosition of current node
-		/*
-		S(0, m) = epos[0];
-		S(1, m) = epos[1];
-		S(2, m) = 0;
-		 
-		*/
-
+		dx(2, m) = 0;
+		//
 		//Fake Cross product to fill the Jacobian
 		J(0,m) = -(endpos[1] - epos[1]) ;
 		J(1,m) =  (endpos[0] - epos[0]) ;
-		J(2, m) = 0;
-
-		//std::cout << "V" << V << std::endl; 
-		//std::cout << "J" << J << std::endl; 
+		J(2,m) = 0;
 
 		m++;
 		if (node->child) { node = node->child; }
@@ -352,12 +338,11 @@ bool jacobian(NODE *node)
 	}
 
 	//Calculate Distance of end effector to Target. If close, Stop.
-	//std::cout << "dist = " << sqrt((dX(0, 0)*dX(0,0)) + (dX(1,0)*dX(1,0))) << std::endl;
-	//std::cout << "dist = " << distToTarget(end) << std::endl;
-	//if (sqrt((dX(0,0)*dX(0,0)) + (dX(1,0)*dX(1,0))) < closeTol) { return true; }
 	if (distToTarget(end) < closeTol) {
 		 return true;
 	}
+	std::cout << J.rows() << " " << J.cols() << std::endl;
+	std::cout << J.pseudo_inverse().rows() << " " << J.pseudo_inverse().cols() << std::endl;
 	
 	
 	
@@ -373,8 +358,12 @@ bool jacobian(NODE *node)
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
 
+	//std::cout << W << std::endl;
 	ColumnVector NewTH = ColumnVector(noofnodes);
 	NewTH = TH + ((J.pseudo_inverse()*dX).column(0));
+	std::cout << NewTH << std::endl;
+	//NewTH = TH + (J.pseudo_inverse()*dX*W);
+	//std::cout << NewTH << std::endl;
 	
 	//Update node angles.
 	node = startNode;
