@@ -311,17 +311,29 @@ void setupChain()
 }
 
 
+float distToTarget(NODE *node)
+{
+	float a,b,c,d;
+	double pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(node, pos);
+	b = pos[0]-IKPosX;
+	c = pos[1]-IKPosY;
+	d = pos[2]-IKPosZ;
+
+	a = sqrt(b*b + c*c + d*d);
+	return a;
+}
 
 void transpose(float*, int, int, float*);
 bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
-/*
+
 void jacobian(NODE *node)
 {
-	float errorTolerance = 30; 
+	float errorTolerance = 10; 
 	float closeTol = 0.05;
 	ColumnVector TH = ColumnVector(noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
-	ColumnVector W = ColumnVector(noofnodes);
+	//ColumnVector W = ColumnVector(noofnodes);
 	Matrix S = Matrix(3, noofnodes);
 	Matrix V = Matrix(3, noofnodes);
 	Matrix J = Matrix(3, noofnodes);
@@ -336,9 +348,9 @@ void jacobian(NODE *node)
 		//W(m,m) = node->weight;
 		W(m) = node->weight;
 
-		double epos[2]; epos[0] = 0; epos[1] = 0;
-		double ppos[2]; ppos[0] = 0; ppos[1] = 0;
-		double endpos[2]; endpos[0] = 0; endpos[1] = 0;
+		double epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
+		double ppos[3]; ppos[0] = 0; ppos[1] = 0; ppos[2] = 0;
+		double endpos[3]; endpos[0] = 0; endpos[1] = 0; endpos[2] = 0;
 		calcEndPos(node, epos);
 		if (node->parent) { calcEndPos(node->parent, ppos); }
 		calcEndPos(end, endpos);
@@ -346,18 +358,12 @@ void jacobian(NODE *node)
 		//dX = distance from target to end effector
 		dX(0, m) = IKPosX - endpos[0];   //Minimise dX
 		dX(1, m) = IKPosY - endpos[1];
-		dX(2, m) = 0;
-		//if (sqrt((dX(0,m)*dX(0,m)) + (dX(1,m)*dX(1,m))) < closeTol) { return; }
-
-		//S = endPosition of current node
-		S(0, m) = epos[0];
-		S(1, m) = epos[1];
-		S(2, m) = 0;
-
+		dX(2, m) = IKPosZ - endpos[2];
+		
 		//Fake Cross product to fill the Jacobian
-		J(0,m) = (IKPosY - S(1, m)) ;
-		J(1,m) = -(IKPosX - S(0, m)) ;
-		J(2, m) = 0;
+		J(0,m) = -(endpos[1] - epos[1]) ;
+		J(0,m) = (endpos[0] - epos[0]) ;
+		J(2, m) = (endpos[2] - epos[2]);
 
 		//std::cout << "V" << V << std::endl; 
 		//std::cout << "J" << J << std::endl; 
@@ -369,16 +375,18 @@ void jacobian(NODE *node)
 
 	//Calculate Distance of end effector to Target. If close, Stop.
 	std::cout << "dist = " << sqrt((dX(0, 0)*dX(0,0)) + (dX(1,0)*dX(1,0))) << std::endl;
-	if (sqrt((dX(0,0)*dX(0,0)) + (dX(1,0)*dX(1,0))) < closeTol) { return; }
+	if (distToTarget(end) < closeTol) { return true; }
 	
 	
 	
 	//If error is small, stop iterating
 	//If large, halve dX
+	Matrix JJ = J*J.pseudo_inverse();
 	Matrix error = Matrix(noofnodes, noofnodes);
+	error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
 	{
-		error = (identity_matrix(2,2) - (J*J.pseudo_inverse())) * dX;
+		error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
 
@@ -400,7 +408,7 @@ void jacobian(NODE *node)
 	}
 	return;
 }
-*/
+
 
 void CCD(NODE *cur)
 {
