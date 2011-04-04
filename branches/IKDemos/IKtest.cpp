@@ -216,7 +216,7 @@ void setupChain()
 	n3->name = "upper"; n3->child = n4; n3->parent = n2;
 	n4->name = "hand";  n4->child = NULL; n4->parent = n3;
 
-	n1->length[0] = 0; n1->length[1] = 1; n1->weight = 0.5;
+	n1->length[0] = 0; n1->length[1] = 1; n1->weight = 1;
 	n2->length[0] = 0; n2->length[1] = 1; n2->weight = 1;
 	n3->length[0] = 0; n3->length[1] = 1; n3->weight = 1;
 	n4->length[0] = 0; n4->length[1] = 1; n4->weight = 1;

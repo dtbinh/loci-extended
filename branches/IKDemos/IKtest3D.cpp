@@ -327,11 +327,13 @@ float distToTarget(NODE *node)
 void transpose(float*, int, int, float*);
 bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
 
+
+
 bool jacobian(NODE *node)
 {
 	float errorTolerance = 10; 
 	float closeTol = 0.05;
-	ColumnVector TH = ColumnVector(noofnodes);
+	Matrix TH = Matrix(3,noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
 	//ColumnVector W = ColumnVector(noofnodes);
 	Matrix S = Matrix(3, noofnodes);
@@ -342,9 +344,12 @@ bool jacobian(NODE *node)
 
 	NODE *end = getEndEffector(node);
 	int m = 0;
+	float axis[3*noofnodes];
 	while (node)
 	{
-		TH(m) = node->euler[0];
+		TH(0,m) = node->euler[0];
+		TH(1,m) = node->euler[1];
+		TH(2,m) = node->euler[2];
 		//W(m,m) = node->weight;
 		//W(m) = node->weight;
 
@@ -370,10 +375,25 @@ bool jacobian(NODE *node)
 		tj[2] = IKPosZ - ppos[2];
 
 
-		float axis[3];
-		axis[0] = (ej[1]*tj[2]) - (ej[2]*tj[1]);
-		axis[1] = (ej[2]*tj[0]) - (ej[0]*tj[2]);
-		axis[2] = (ej[0]*tj[1]) - (ej[1]*tj[0]);
+		axis[(m*3)+0] = (ej[1]*tj[2]) - (ej[2]*tj[1]);
+		axis[(m*3)+1] = (ej[2]*tj[0]) - (ej[0]*tj[2]);
+		axis[(m*3)+2] = (ej[0]*tj[1]) - (ej[1]*tj[0]);
+
+		float lenAxis = sqrt(axis[(m*3)+0]*axis[(m*3)+0] + axis[(m*3)+1]*axis[(m*3)+1] + axis[(m*3)+2]*axis[(m*3)+2]);
+
+		axis[(m*3)+0] /= lenAxis;
+		axis[(m*3)+1] /= lenAxis;
+		axis[(m*3)+2] /= lenAxis;
+
+		/*
+		glPushMatrix();
+			glTranslatef(ppos[0], ppos[1], ppos[2]);
+			glBegin(GL_LINE);
+				glVertex3f(-axis[m*3+0]/4, -axis[m*3+1]/4, -axis[m*3+2]/4);
+				glVertex3f( axis[m*3+0]/4,  axis[m*3+1]/4,  axis[m*3+2]/4);
+			glEnd();
+		glPopMatrix();
+		*/
 
 		//Fake Cross product to fill the Jacobian
 		J(0, m) = (ej[1]*axis[2]) - (ej[2]*axis[1]);
@@ -389,11 +409,12 @@ bool jacobian(NODE *node)
 	}
 
 	//Calculate Distance of end effector to Target. If close, Stop.
-	std::cout << "dist = " << sqrt((dX(0, 0)*dX(0,0)) + (dX(1,0)*dX(1,0))) << std::endl;
+	std::cout << "dist = " << distToTarget(end) << std::endl;
 	if (distToTarget(end) < closeTol) { return true; }
 	
 	
 	
+	/*
 	//If error is small, stop iterating
 	//If large, halve dX
 	Matrix JJ = J*J.pseudo_inverse();
@@ -404,20 +425,36 @@ bool jacobian(NODE *node)
 		error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
-
+*/
 	ColumnVector NewTH = ColumnVector(noofnodes);
-	NewTH = TH + ((J.pseudo_inverse()*dX).column(0));
+	ColumnVector W = ColumnVector(noofnodes).fill(1);
+	std::cout << J.pseudo_inverse()*dX << std::endl;
+	NewTH = (J.pseudo_inverse()*dX*W);
+	std::cout << TH << " + " << NewTH << std::endl;
 	
 
 	//Update node angles.
 	node = startNode;
 	for (int i =0; i<NewTH.length(); i++)	
 	{
+		float taxis[3];
+		taxis[0] = axis[(i*3)+0]; 
+		taxis[1] = axis[(i*3)+1]; 
+		taxis[2] = axis[(i*3)+2];
+		float eul[3]; eul[0] = 0; eul[1] = 0; eul[2] = 0;
+
+		radAngleAxisRot(degRad(NewTH(i)), taxis, eul);
 		if (node != NULL)
 		{
-			node->euler[0] = NewTH(i);
+			node->euler[0] += radDeg(eul[0]);
+			node->euler[1] += radDeg(eul[1]);
+			node->euler[2] += radDeg(eul[2]);
 			while (node->euler[0] > 360) { node->euler[0] -= 360; }
 			while (node->euler[0] < -360) { node->euler[0] += 360; }
+			while (node->euler[1] > 360) { node->euler[1] -= 360; }
+			while (node->euler[1] > 360) { node->euler[1] -= 360; }
+			while (node->euler[2] < -360) { node->euler[2] += 360; }
+			while (node->euler[2] < -360) { node->euler[2] += 360; }
 			node = node->child;
 		} else { std::cout << "Error: Array too long for chain" << std::endl; }
 	}
@@ -507,48 +544,12 @@ void CCD(NODE *cur)
 	std::cout << "RotAng: " << radDeg(rotAng) << std::endl;
 	//rotAng *= cur->weight;
 
-	//Rotate by acos(cosA) around axis
-	//Convert to Euler Rotations angles
-	//
-	Matrix axisMat = Matrix(3,3);
-	axisMat(0,0) = 1+ (1-cos(rotAng))*(axis[0]*axis[0]-1);
-	axisMat(0,1) = -axis[2]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[1];
-	axisMat(0,2) = axis[1]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[2];
+	float eulers[3];
+	radAngleAxisRot(rotAng, axis, eulers);
 
-	axisMat(1,0) = axis[2]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[1];
-	axisMat(1,1) = 1 + (1-cos(rotAng))*(axis[1]*axis[1]-1);
-	axisMat(1,2) = -axis[0]*sin(rotAng)+(1-cos(rotAng))*axis[1]*axis[2];
-	
-	axisMat(2,0) = -axis[1]*sin(rotAng)+(1-cos(rotAng))*axis[0]*axis[2];
-	axisMat(2,1) = axis[0]*sin(rotAng)+(1-cos(rotAng))*axis[1]*axis[2];
-	axisMat(2,2) = 1 + (1-cos(rotAng))*(axis[2]*axis[2]-1);
-
-	float x, y, z;
-	
-	if (axisMat(1,0) > 0.998)
-	{
-		std::cout << "sing NORTH" << std::endl;
-		 //Singluarity at north Pole
-		 y = atan2(axisMat(0,2), axisMat(2,2));
-		 x = PI/2;
-		 z = 0;
-	} else if (axisMat(1,0) < -0.998)
-	{
-		std::cout << "sing SOUTH" << std::endl;
-		//Singularit at south pole
-		y = atan2(axisMat(0,2), axisMat(2,2));
-		x = -PI/2;
-		z = 0;
-	} else {
-		y = atan2(-axisMat(2,0), axisMat(0,0));
-		x = atan2(-axisMat(1,2), axisMat(1,1));
-		z = asin(-axisMat(1,0));
-	}
-
-
-	cur->euler[0] += radDeg(x);
-	cur->euler[1] += radDeg(y);
-	cur->euler[2] += radDeg(z);
+	cur->euler[0] += radDeg(eulers[0]);
+	cur->euler[1] += radDeg(eulers[1]);
+	cur->euler[2] += radDeg(eulers[2]);
 
 	if (doLimit)
 	{
@@ -624,18 +625,18 @@ void display(void)
 	
 	if (doJac)
 	{
-		jacobian(nodeList[0]);
+		bool c = false;
+		int count = 0;
+		while ((count < 30) && (c == false))
+		{
+			count++;
+			c = jacobian(nodeList[0]);
+		}
 	} else {
 		NODE *node = getEndEffector(nodeList[0]);
-		float pos[3];
-		while (node)
+		NODE *enode = node;
+		while ((node) && (distToTarget(enode) > 0.05))
 		{
-	//		pos[0] = 0; pos[1] = 0; pos[2] = 0;
-	//		calcEndPos(node, pos);
-	//		glPushMatrix();
-	//		 glTranslatef(pos[0], pos[1], pos[2]);
-	//		 glutSolidSphere(0.1, 5, 5);
-	//		glPopMatrix();
 			CCD(node);
 			node = node->parent;
 		}

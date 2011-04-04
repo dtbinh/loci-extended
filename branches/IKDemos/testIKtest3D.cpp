@@ -6,13 +6,25 @@
 
 TEST(RotMat000)
 {
-
 	Matrix pRotMat = Matrix(3,3).fill(0);
+	Matrix pRotMatT = Matrix(3,3).fill(0);
 	Matrix pRotMatF = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(0, 0, 0);
+
+	pRotMatT = fillRotMat(0, 0, 0);
+	float pRotArr[9];
+	fillRotMat(0, 0, 0, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
+	
 
 
 	pRotMatF = pRotMat*pRotMat.transpose();
+
+	CHECK_EQUAL(pRotMat, pRotMatT);
 
 	CHECK_CLOSE(1, pRotMatF(0,0), 0.004);
 	CHECK_CLOSE(0, pRotMatF(0,1), 0.004);
@@ -31,8 +43,17 @@ TEST(RotMatZ30)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
 	Matrix pRotMatF = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(0, 0, 40/180.0*PI);
 
+	pRotMat = fillRotMat(0, 0, 0);
+	float pRotArr[9];
+	fillRotMat(0, 0, 40/180.0*PI, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
+	
 
 	pRotMatF = pRotMat*pRotMat.transpose();
 
@@ -52,8 +73,15 @@ TEST(RotMatZ30)
 TEST(RotMatX60)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(60/180.0*PI, 0, 0);
 
+	float pRotArr[9];
+	fillRotMat(60/180.0*PI, 0, 0, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
 	Matrix pRotMatF = Matrix(3,3).fill(0);
 	pRotMatF = pRotMat*pRotMat.transpose();
 
@@ -73,8 +101,15 @@ TEST(RotMatX60)
 TEST(RotMatY25)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(0, 25/180.0*PI, 0);
 
+	float pRotArr[9];
+	fillRotMat(0, 25/180.0*PI, 0, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
 	Matrix pRotMatF = Matrix(3,3).fill(0);
 	pRotMatF = pRotMat*pRotMat.transpose();
 
@@ -94,8 +129,16 @@ TEST(RotMatY25)
 TEST(RotMatx30y25)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(30/180.0*PI, 25/180.0*PI, 0);
-
+	Matrix pRotMatT = Matrix(3,3).fill(0);
+	
+	float pRotArr[9];
+	fillRotMat(30/180.0*PI, 25/180.0*PI, 0, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
 	Matrix pRotMatF = Matrix(3,3).fill(0);
 	pRotMatF = pRotMat*pRotMat.transpose();
 
@@ -115,8 +158,16 @@ TEST(RotMatx30y25)
 TEST(RotMatx30z75)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(30/180.0*PI, 0, 75/180.0*PI);
+	//pRotMat = fillRotMat(30/180.0*PI, 0, 75/180.0*PI);
 
+	float pRotArr[9];
+	fillRotMat(30/180.0*PI, 0, 75/180.0*PI, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
 	Matrix pRotMatF = Matrix(3,3).fill(0);
 	pRotMatF = pRotMat*pRotMat.transpose();
 
@@ -136,8 +187,16 @@ TEST(RotMatx30z75)
 TEST(RotMatx30y80z75)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
-	pRotMat = fillRotMat(30/180.0*PI, -80/180.0*PI, 75/180.0*PI);
+	//pRotMat = fillRotMat(30/180.0*PI, -80/180.0*PI, 75/180.0*PI);
 
+	float pRotArr[9];
+	fillRotMat(30/180.0*PI, -80/180.0*PI, 75/180.0*PI, pRotArr);
+	for (int i= 0; i< 3; i++)
+	{
+		pRotMat(i, 0) = pRotArr[i*3+0];
+		pRotMat(i, 1) = pRotArr[i*3+1];
+		pRotMat(i, 2) = pRotArr[i*3+2];
+	}
 	Matrix pRotMatF = Matrix(3,3).fill(0);
 	pRotMatF = pRotMat*pRotMat.transpose();
 
@@ -603,6 +662,53 @@ CHECK_CLOSE(-0.866, pos[0], D);
 CHECK_CLOSE(2.165, pos[1], D);
 CHECK_CLOSE(-0.250, pos[2], D);
 }
+
+TEST (axisAngleRad90Y)
+{
+	float eul[3]; eul[0] = 0; eul[1] = 0; eul[2] = 0;
+	
+	float axis[3];
+	axis[0] = 0;
+	axis[1] = 1;
+	axis[2] = 0;
+	radAngleAxisRot(degRad(90), axis, eul);
+	
+	CHECK_CLOSE(0, eul[0], D);
+	CHECK_CLOSE(degRad(90), eul[1], D);
+	CHECK_CLOSE(0, eul[2], D);
+}
+
+TEST (axisAngleRad45X)
+{
+	float eul[3]; eul[0] = 0; eul[1] = 0; eul[2] = 0;
+	
+	float axis[3];
+	axis[0] = 1;
+	axis[1] = 0;
+	axis[2] = 0;
+	radAngleAxisRot(degRad(45), axis, eul);
+	
+	CHECK_CLOSE(degRad(45), eul[0], D);
+	CHECK_CLOSE(0, eul[1], D);
+	CHECK_CLOSE(0, eul[2], D);
+}
+
+/*
+TEST (axisAngleRad90XZ)
+{
+	float eul[3]; eul[0] = 0; eul[1] = 0; eul[2] = 0;
+	
+	float axis[3];
+	axis[0] = sqrt(1);
+	axis[1] = 0;
+	axis[2] = sqrt(1);
+	radAngleAxisRot(degRad(45), axis, eul);
+	
+	CHECK_CLOSE(degRad(45), eul[0], D);
+	CHECK_CLOSE(0, eul[1], D);
+	CHECK_CLOSE(0, eul[2], D);
+}
+*/
 
 int main()
 {
