@@ -109,7 +109,7 @@ inline const char* MocapData::GetError()
 
 inline void MocapData::AddEffector(NODE *seg)
 {
-				  std::cout << "Enlarge Children " << seg->name << std::endl;
+			//	  std::cout << "Enlarge Children " << seg->name << std::endl;
 				  EnlargeEffectorList();
 				  effectorlist[header->noofeffectors++] = seg;
 

@@ -14,7 +14,7 @@ DisplayGL::~DisplayGL() {}
 
 void DisplayGL::Init()
 {
-  MessageBoxa("DisplayGL.Init");
+ // MessageBoxa("DisplayGL.Init");
   GLfloat	fAspect;
 
   glClearDepth(1.0f);
@@ -28,7 +28,7 @@ void DisplayGL::Init()
 	  fAspect = (GLfloat)rect[2]/rect[3];
 	else
 	  fAspect = 1.0f;
-  std::cout << "ASPECT" << fAspect << std::endl;
+ // std::cout << "ASPECT" << fAspect << std::endl;
 	
   glViewport(0, 0, rect[3], rect[4]);
   glMatrixMode(GL_PROJECTION);
@@ -36,7 +36,7 @@ void DisplayGL::Init()
   gluPerspective(40.0f, fAspect, 0.0f, 10.0f);
   glMatrixMode(GL_MODELVIEW);
 
-  MessageBoxa("End of DisplayGL.Init");
+ // MessageBoxa("End of DisplayGL.Init");
 }
 
 
@@ -50,7 +50,25 @@ void DisplayGL::Draw()
    // glRotatef(centre[1], 0.0f, 1.0f, 0.0f);
    // glRotatef(centre[2], 0.0f, 0.0f, 1.0f);
 
-  //return; 
+
+  /*
+  std::cout << "Header euler" << std::endl;
+  std::cout << header->euler[0][0] << " " << header->euler[0][1] << " " << header->euler[0][2] << std::endl;
+  std::cout << header->euler[1][0] << " " << header->euler[1][1] << " " << header->euler[1][2] << std::endl;
+  std::cout << header->euler[2][0] << " " << header->euler[2][1] << " " << header->euler[2][2] << std::endl;
+*/	
+  
+	//for (int i = 0; i < header->noofeffectors; i++)
+	//	{
+		//	if (!strcmp(effectorlist[i]->name, "Head")) 
+		//	{			
+			//	if ( header->euler[0][1] = 1 ) { effectorlist[i]->euler[0] = 45; }
+				//if ( header->euler[1][1] = 1 ) { effectorlist[i]->euler[1] = 45; }
+				//if ( header->euler[2][1] = 1 ) { effectorlist[i]->euler[2] = 45; }
+		//	}	
+		//}
+  
+
   glPushMatrix();
 	if (body)
 	  EvaluateChildren(body);
@@ -59,7 +77,7 @@ void DisplayGL::Draw()
 
   //Draw Positions of end effectors
   
-  /*
+  
 	if (body)
 	{
 		for (int i = 0; i < header->noofeffectors; i++)
@@ -80,7 +98,7 @@ void DisplayGL::Draw()
 		}
 		
 	}
-	*/
+	
 
   glPopMatrix();
 }
@@ -160,6 +178,21 @@ void DisplayGL::EvaluateChildren(NODE* node)
 			glScalef(1, 0.2f, 1);
 			glutSolidSphere(0.1f, 17, 17);
 		glPopMatrix();
+
+		if (!strcmp(node->name, "Head") || !strcmp(node->name, "head") )
+		{
+			glColor3f(0.5f, 0, 0);
+			glPushMatrix();	
+				glTranslatef(node->length[0] * node->scale[header->currentframe], node->length[1] * node->scale[header->currentframe]-0.05f, node->length[2] * node->scale[header->currentframe]+0.05f);
+				glScalef(0.2f, 0.2f, 1.0f);
+				glutSolidSphere(0.1f, 17, 17);
+			glPopMatrix();		
+				glPushMatrix();	
+				glTranslatef(node->length[0] * node->scale[header->currentframe], node->length[1] * node->scale[header->currentframe]-0.05f, node->length[2] * node->scale[header->currentframe]);
+				glScalef(0.5f, 0.5f, 0.5f);
+				glutSolidSphere(0.1f, 17, 17);
+			glPopMatrix();	
+		}
 
 	}
 

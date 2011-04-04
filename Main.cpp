@@ -200,16 +200,18 @@ int main (int argc, char **argv)
 
 
 	//TODO Get mocap filename from data
-	char* filename = NULL;
+	char* filename = "";
+	yOffset = 0;
 	for (int i=0; i < argc; i++)
 	{
-		if (argv[i] == "-f") { strcpy(filename,argv[i+1]); }
-		
-		
-		
+		//std::cout << "." << argv[i] << "." << std::endl;
+		if (!strcmp(argv[i], "-f")) { filename = argv[i+1];	}
+		if (!strcmp(argv[i], "-o")) { yOffset = (float)atof(argv[i+1]);	}
 	} 
-	std::cout << "Loading Filename " << filename << std::endl;
+//	std::cout << "Loading Filename " << filename << std::endl;
 	loadFilename(filename);
+
+
 	glutMainLoop();
 }
 
@@ -244,8 +246,9 @@ void loadFilename (const char* m_lpCmdLine)
   char mocapfilename[200];
   if (m_lpCmdLine[0])
   {
+	  std::cout << "Loading filename " << m_lpCmdLine << std::endl;
     strcpy(mocapfilename,m_lpCmdLine);  // get file to load in from the command line parameters
-	yOffset = -3;
+	//yOffset = 1;
   }
   else  // no specified file so use a default one
   {
