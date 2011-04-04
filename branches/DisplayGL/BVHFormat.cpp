@@ -303,7 +303,8 @@ bool BVHFormat::ImportData(const char *filename)
   }
   else
   {
-    strcpy(error, "Cannot Open File");
+    strcpy(error, "Cannot open file ");
+	strcat(error, filename);
     return false;
   }
 
