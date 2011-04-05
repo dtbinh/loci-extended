@@ -1,11 +1,195 @@
 //mkoctfile -lGL -lglut -lunittest++ --link-stand-alone testIKtest3D.cpp -o ./bin/testIKtest3D && ./bin/testIKtest3D
 #define MAIN
+#define OCTAVE 
 #include <unittest++/UnitTest++.h>
 #include "nodeFuncs.h"
 #define D 0.004
 
+void printSqrArr(float *arr, int m, int n)
+{
+	for ( int i=0; i<m; i++)
+	{
+		for (int j=0; j<n; j++)
+		{
+			std::cout << arr[(i*3)+j] << "\t";
+		}
+		std::cout << std::endl;
+	}
+}
+TEST(mult)
+{
+	float a[9];
+	float b[9];
+	float ans[9];
+
+	for (int i=0; i<9; i++) { a[i] = 0; b[i] = 0; }
+
+	a[0] = 1; a[4] = 1; a[8] = 1;
+
+	b[0] = 1; b[1] = 2; b[2] = 3;
+	b[3] = 4.5; b[4] = 5; b[5] = 6;
+	b[6] = 7; b[7] = 8; b[8] = 9;
+
+	mult(a, 3, 3, b, 3, 3, ans);
+
+	CHECK_EQUAL(1, ans[0]);
+	CHECK_EQUAL(2, ans[1]);
+	CHECK_EQUAL(3, ans[2]);
+
+	CHECK_EQUAL(4.5, ans[3]);
+	CHECK_EQUAL(5, ans[4]);
+	CHECK_EQUAL(6, ans[5]);
+
+	CHECK_EQUAL(7, ans[6]);
+	CHECK_EQUAL(8, ans[7]);
+	CHECK_EQUAL(9, ans[8]);
+}
+
+
+
+TEST(mult2)
+{
+	float a[9];
+	float b[9];
+	float ans[9];
+
+	for (int i=0; i<9; i++) { a[i] = 0; b[i] = 0; ans[i] = 0; }
+
+	a[0] = 1; a[4] = 2; a[8] = 3;
+
+	b[0] = 1; b[1] = 2; b[2] = 3;
+	b[3] = 4; b[4] = 5; b[5] = 6;
+	b[6] = 7; b[7] = 8; b[8] = 9;
+
+	mult(a, 3, 3, b, 3, 3, ans);
+
+	//printSqrArr(ans, 3, 3);
+
+	CHECK_EQUAL(1, ans[0]);
+	CHECK_EQUAL(2, ans[1]);
+	CHECK_EQUAL(3, ans[2]);
+
+	CHECK_EQUAL(8, ans[3]);
+	CHECK_EQUAL(10, ans[4]);
+	CHECK_EQUAL(12, ans[5]);
+
+	CHECK_EQUAL(21, ans[6]);
+	CHECK_EQUAL(24, ans[7]);
+	CHECK_EQUAL(27, ans[8]);
+}
+
+TEST(mult3)
+{
+	float a[9];
+	float b[9];
+	float ans[9];
+
+	for (int i=0; i<9; i++) { a[i] = 0; b[i] = 0; ans[i] = 0; }
+
+	a[0] = 2; a[1] = 4; a[2] = 6;
+	a[3] = 3; a[4] = 5; a[5] = 1;
+	a[6] = 0; a[7] = 9; a[8] = 3;
+
+	b[0] = 1; b[1] = 2; b[2] = 3;
+	b[3] = 4; b[4] = 5; b[5] = 6;
+	b[6] = 7; b[7] = 8; b[8] = 9;
+
+	mult(a, 3, 3, b, 3, 3, ans);
+
+	//printSqrArr(ans, 3, 3);
+
+	CHECK_EQUAL(60, ans[0]);
+	CHECK_EQUAL(72, ans[1]);
+	CHECK_EQUAL(84, ans[2]);
+
+	CHECK_EQUAL(30, ans[3]);
+	CHECK_EQUAL(39, ans[4]);
+	CHECK_EQUAL(48, ans[5]);
+
+	CHECK_EQUAL(57, ans[6]);
+	CHECK_EQUAL(69, ans[7]);
+	CHECK_EQUAL(81, ans[8]);
+}
+
+TEST(mult4)
+{
+	float a[9];
+	float b[9];
+	float ans[9];
+
+	for (int i=0; i<9; i++) { a[i] = 0; b[i] = 0; ans[i] = 0; }
+
+	a[0] = 3; a[1] = 1; a[2] = 0;
+	a[3] = 3; a[4] = 5; a[5] = 0;
+	a[6] = 0; a[7] = 0; a[8] = 0;
+
+	b[0] = 1; b[1] = 2; b[2] = 3;
+	b[3] = 4; b[4] = 5; b[5] = 6;
+	b[6] = 7; b[7] = 8; b[8] = 9;
+
+	mult(a, 3, 3, b, 3, 3, ans);
+
+	//printSqrArr(ans, 3, 3);
+
+	CHECK_EQUAL(7, ans[0]);
+	CHECK_EQUAL(11, ans[1]);
+	CHECK_EQUAL(15, ans[2]);
+
+	CHECK_EQUAL(23, ans[3]);
+	CHECK_EQUAL(31, ans[4]);
+	CHECK_EQUAL(39, ans[5]);
+
+	CHECK_EQUAL(0, ans[6]);
+	CHECK_EQUAL(0, ans[7]);
+	CHECK_EQUAL(0, ans[8]);
+}
+
+TEST(multVect)
+{
+	float a[3];
+	float b[9];
+	float ans[3];
+
+	for (int i=0; i<9; i++) { b[i] = 0; }
+	for (int i=0; i<3; i++) { a[i] = 0; ans[i] = 0; }
+
+	a[0] = 1; a[1] = 2; a[2] = 3;
+
+	b[0] = 1; b[1] = 2; b[2] = 3;
+	b[3] = 4; b[4] = 5; b[5] = 6;
+	b[6] = 7; b[7] = 8; b[8] = 9;
+
+	mult(b, 3, 3, a, 3, 1, ans);
+	CHECK_EQUAL(14, ans[0]);
+	CHECK_EQUAL(32, ans[1]);
+	CHECK_EQUAL(50, ans[2]);
+}
+
+
+TEST(multVect2)
+{
+	float a[3];
+	float b[9];
+	float ans[3];
+
+	for (int i=0; i<9; i++) { b[i] = 0; }
+	for (int i=0; i<3; i++) { a[i] = 0; ans[i] = 0; }
+
+	a[0] = 1; a[1] = 1; a[2] = 1;
+
+	b[0] = 1; b[1] = 2; b[2] = 3;
+	b[3] = 4; b[4] = 5; b[5] = 6;
+	b[6] = 7; b[7] = 8; b[8] = 9;
+
+	mult(b, 3, 3, a, 3, 1, ans);
+
+	CHECK_EQUAL(6, ans[0]);
+	CHECK_EQUAL(15, ans[1]);
+	CHECK_EQUAL(24, ans[2]);
+}
 TEST(RotMat000)
 {
+	
 	Matrix pRotMat = Matrix(3,3).fill(0);
 	Matrix pRotMatT = Matrix(3,3).fill(0);
 	Matrix pRotMatF = Matrix(3,3).fill(0);
@@ -13,6 +197,7 @@ TEST(RotMat000)
 	pRotMatT = fillRotMat(0, 0, 0);
 	float pRotArr[9];
 	fillRotMat(0, 0, 0, pRotArr);
+	
 	for (int i= 0; i< 3; i++)
 	{
 		pRotMat(i, 0) = pRotArr[i*3+0];
@@ -26,6 +211,7 @@ TEST(RotMat000)
 
 	CHECK_EQUAL(pRotMat, pRotMatT);
 
+	
 	CHECK_CLOSE(1, pRotMatF(0,0), 0.004);
 	CHECK_CLOSE(0, pRotMatF(0,1), 0.004);
 	CHECK_CLOSE(0, pRotMatF(0,2), 0.004);
@@ -70,6 +256,7 @@ TEST(RotMatZ30)
 	CHECK_CLOSE(1, pRotMatF(2,2), 0.004);
 }
 
+
 TEST(RotMatX60)
 {
 	Matrix pRotMat = Matrix(3,3).fill(0);
@@ -97,6 +284,7 @@ TEST(RotMatX60)
 	CHECK_CLOSE(0, pRotMatF(2,1), 0.004);
 	CHECK_CLOSE(1, pRotMatF(2,2), 0.004);
 }
+
 
 TEST(RotMatY25)
 {
@@ -213,22 +401,28 @@ TEST(RotMatx30y80z75)
 	CHECK_CLOSE(1, pRotMatF(2,2), 0.004);
 }
 
+
 //CalcEndPos Single Rotations + single Nodes
 TEST(calcEndPosNoRot)
 {
-NODE *n = new NODE;
-n->name = "node";
-n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
-n->child = NULL; n->parent = NULL;
-n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+	NODE *n = new NODE;
+	n->name = "node";
+	n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
+	n->child = NULL; n->parent = NULL;
+	n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
 
-float pos[3];
-pos[0] = 0; pos[1] = 0; pos[2] = 0;
-calcEndPos(n, pos);
-CHECK_CLOSE(0, pos[0], D);
-CHECK_CLOSE(1, pos[1], D);
-CHECK_CLOSE(0, pos[2], D);
+	float pos[3];
+	pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(n, pos);
+
+	//std::cout << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+	CHECK_CLOSE(0, pos[0], D);
+	CHECK_CLOSE(1, pos[1], D);
+	CHECK_CLOSE(0, pos[2], D);
 }
+
+
+
 TEST(calcEndPosXRot)
 {
 NODE *n = new NODE;
@@ -245,6 +439,7 @@ CHECK_CLOSE(0.766, pos[1], D);
 CHECK_CLOSE(0.643, pos[2], D);
 }
 
+
 TEST(calcEndPosZRot)
 {
 NODE *n = new NODE;
@@ -260,6 +455,8 @@ CHECK_CLOSE(-0.5, pos[0], D);
 CHECK_CLOSE(0.866, pos[1], D);
 CHECK_CLOSE(0, pos[2], D);
 }
+
+
 TEST(calcEndPosYRot)
 {
 NODE *n = new NODE;
@@ -275,6 +472,7 @@ CHECK_CLOSE(0, pos[0], D);
 CHECK_CLOSE(0, pos[1], D);
 CHECK_CLOSE(1, pos[2], D);
 }
+
 
 //CalcEndPos Single Node + Double Rotation
 TEST(calcEndPosXZRot)
@@ -333,27 +531,30 @@ CHECK_CLOSE(0, pos[0], D);
 CHECK_CLOSE(2, pos[1], D);
 CHECK_CLOSE(0, pos[2], D);
 }
+
 TEST(DoubleNodeRotTop)
 {
-NODE *n = new NODE;
-NODE *na = new NODE;
-n->name = "node"; na->name = "node2";
-n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
-n->child = na; n->parent = NULL;
-n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+	NODE *n = new NODE;
+	NODE *na = new NODE;
+	n->name = "node"; na->name = "node2";
+	n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
+	n->child = na; n->parent = NULL;
+	n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
 
-na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
-na->child = NULL; 	na->parent = n;
-na->euler[0] = 45;	na->euler[1] = 0;	na->euler[2] = 0;
+	na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
+	na->child = NULL; 	na->parent = n;
+	na->euler[0] = 45;	na->euler[1] = 0;	na->euler[2] = 0;
 
+	float pos[3];
+	pos[0] = 0; pos[1] = 0; pos[2] = 0;
 
-float pos[3];
-pos[0] = 0; pos[1] = 0; pos[2] = 0;
-calcEndPos(na, pos);
-CHECK_CLOSE(0, pos[0], D);
-CHECK_CLOSE(1.707, pos[1], D);
-CHECK_CLOSE(0.707, pos[2], D);
+	calcEndPos(na, pos);
+
+	CHECK_CLOSE(0, pos[0], D);
+	CHECK_CLOSE(1.707, pos[1], D);
+	CHECK_CLOSE(0.707, pos[2], D);
 }
+
 
 TEST(DoubleNodeZRotZ)
 {
