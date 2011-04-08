@@ -295,8 +295,9 @@ float distToTarget(NODE *node)
 	a = sqrt(b*b + c*c);
 	return a;
 }
-void transpose(float*, int, int, float*);
-bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
+//void transpose(float*, int, int, float*);
+//bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
+
 
 bool jacobian(NODE *node)
 {
@@ -381,6 +382,7 @@ bool jacobian(NODE *node)
 	//std::cout << "Nodes Updated" << std::endl;
 	return false;
 }
+
 
 void CCD(NODE *cur)
 {
