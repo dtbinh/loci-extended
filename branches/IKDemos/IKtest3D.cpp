@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <map>
 
 bool* keyStates = new bool[256]; 
 
@@ -29,12 +30,15 @@ GLfloat mShininess[] = {128};
 
 int noofnodes = 0;
 NODE *nodeList[10];
+typedef std::map<NODE*, float*> NodeAxisMap;
+NodeAxisMap nodeAxisMap;
+
 int nooftests = 0;
 NODE *testList[10];
 
 float IKPosX = 3;
 float IKPosY = 3;
-float IKPosZ = 0;
+float IKPosZ = 1;
 
 void init (void)
 {
@@ -409,7 +413,7 @@ bool jacobian(NODE *node)
 	}
 
 	//Calculate Distance of end effector to Target. If close, Stop.
-	std::cout << "dist = " << distToTarget(end) << std::endl;
+	//std::cout << "dist = " << distToTarget(end) << std::endl;
 	if (distToTarget(end) < closeTol) { return true; }
 	
 	
@@ -512,6 +516,7 @@ void CCD(NODE *cur)
 	float cosA = ejdottj/(ejSqr*tjSqr);
 
 	//Axis = axis to rotate around. CrossProduct of ej+tj
+
 	float axis[3];
 	axis[0] = (ej[1]*tj[2])-(ej[2]*tj[1]);
 	axis[1] = (ej[2]*tj[0])-(ej[0]*tj[2]);
@@ -519,21 +524,42 @@ void CCD(NODE *cur)
 
 	//Normalise Rotation axis
 	float lenAxis = sqrt((axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]));
-	float sinA = (axis[0]+axis[1]+axis[2])/(ejSqr*tjSqr);
-	std::cout << "Sins " <<  sinA << std::endl;
+	//float sinA = (axis[0]+axis[1]+axis[2])/(ejSqr*tjSqr);
+	float sinA = minejdottj/(ejSqr*tjSqr);
+	//std::cout << "Sins " <<  sinA << std::endl;
 
 	axis[0] /= lenAxis;
 	axis[1] /= lenAxis;
 	axis[2] /= lenAxis;
 
-	glPushMatrix();
-		glTranslatef(jpos[0], jpos[1], jpos[2]);
-		glBegin(GL_LINE);
-			glVertex3f(-axis[0]/4, -axis[1]/4, -axis[2]/4);
-			glVertex3f( axis[0]/4,  axis[1]/4,  axis[2]/4);
-		glEnd();
-	glPopMatrix();
+	//A pervious iteration saved the axis of rotation. If it is similar to the new one, use the previously saved one.
+	//TODO Check for benefits
+	if (nodeAxisMap[cur]) 
+	{ 
+		float axisO[3];
+		axisO[0] = nodeAxisMap[cur][0];
+	   	axisO[1] = nodeAxisMap[cur][1]; 
+	   	axisO[2] = nodeAxisMap[cur][2];
 
+		//std::cout << axis[0] << axis[1] << axis[2] << std::endl;
+		//std::cout << axisO[0] << axisO[1] << axisO[2] <<  " ";
+		float adotao = axis[0]*axisO[0] + axis[1]*axisO[1] + axis[2]*axisO[2];
+		//std::cout << adotao ;  
+		adotao = adotao>-1?adotao:-1;
+		adotao = adotao<1?adotao:1;
+
+		//acos(0.984) = 10 degrees?
+		if (adotao > 0.984) 
+		{
+			//std::cout << "EQUAL" << std::endl;
+			axis[0] = axisO[0];
+			axis[1] = axisO[1];
+			axis[2] = axisO[2];
+		}
+	}
+	//Set this nodes's axis as the axis for next time
+	nodeAxisMap[cur] = axis;
+	
 	//Limit cosA - eliminates rounding errors.
 	cosA = cosA>-1?cosA:-1;
 	cosA = cosA<1?cosA:1;
@@ -541,7 +567,7 @@ void CCD(NODE *cur)
 	if (rotAng < 0.01 ) { return; }
 	if (sinA < 0) { rotAng = -rotAng; }
 	//if (axis[2] < 0) { rotAng = -rotAng; }
-	std::cout << "RotAng: " << radDeg(rotAng) << std::endl;
+	//std::cout << "RotAng: " << radDeg(rotAng) << std::endl;
 	//rotAng *= cur->weight;
 
 	float eulers[3];
@@ -569,7 +595,7 @@ void CCD(NODE *cur)
 		if (cur->euler[2] > 360) { cur->euler[2] -= 360; } else if (cur->euler[2] < -360) { cur->euler[2] += 360; }
 	}
 
-	std::cout << "Eulers: " << cur->euler[0] << " " << cur->euler[1] << " " <<cur->euler[2] << std::endl; 
+	//std::cout << "Eulers: " << cur->euler[0] << " " << cur->euler[1] << " " <<cur->euler[2] << std::endl; 
 
 }
 
@@ -596,30 +622,6 @@ void display(void)
 	glLineWidth(2);
 
 
-
-	//std::cout << "EVALUATEING CHAIN" << std::endl;
-
-	/*
-	for (int i=0; i<nooftests; i++)
-	{
-
-		std::cout << testList[i]->name << std::endl;
-		float pos[3];
-		pos[0] = 0; pos[1] = 0; pos[2] = 0;
-		calcEndPos(testList[i], pos);
-		glColor3f(0.5, 0, 0);
-		glPushMatrix();
-		 glTranslatef(pos[0], pos[1], pos[2]);
-		 glutSolidSphere(0.1, 5, 5);
-		glPopMatrix();
-
-		if (testList[i]->parent == NULL)
-		{
-			evaluateChain(testList[i]);
-		}
-	}
-	*/
-	
 	evaluateChain(nodeList[0]);
 
 	
@@ -635,10 +637,17 @@ void display(void)
 	} else {
 		NODE *node = getEndEffector(nodeList[0]);
 		NODE *enode = node;
-		while ((node) && (distToTarget(enode) > 0.05))
+		//while ((node) && (distToTarget(enode) > 0.05))
+		int count = 0;
+		while ((count < 30) && (distToTarget(enode) > 0.05))
 		{
-			CCD(node);
-			node = node->parent;
+			while (node)
+			{
+				CCD(node);
+				node = node->parent;
+			}
+			node = enode;
+			count++;
 		}
 
 	}
