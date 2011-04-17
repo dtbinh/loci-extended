@@ -115,6 +115,7 @@ inline void MocapData::AddEffector(NODE *seg)
 
 }
 
+//Search for an and effector of current chain, add it to the list of effectors
 inline void MocapData::SearchEffector(NODE *seg)
 {
 	//std::cout << "SearchEffector " << seg->name << std::endl;
@@ -128,4 +129,7 @@ inline void MocapData::SearchEffector(NODE *seg)
 
 	}
 }
+
+
+
 #endif

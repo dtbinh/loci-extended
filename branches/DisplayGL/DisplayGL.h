@@ -48,7 +48,9 @@
 #include <GL/glut.h>
 //#include "gl\glaux.h"
 #include "Extras.h"
+#include "ccdFuncs.h"
 #include <vector>
+#include <cstring>
 
 class DisplayGL// : public CWnd//, public CWinThread, 
 {

@@ -40,10 +40,10 @@ void reshape(int width, int height)
 void init()
 {
 	glEnable(GL_BLEND);
-	glEnable (GL_DEPTH_TEST);
-	glEnable (GL_COLOR_MATERIAL);
-	glEnable (GL_LIGHTING);
-	glEnable (GL_LIGHT0);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_COLOR_MATERIAL);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	glShadeModel(GL_SMOOTH);
 }
 
@@ -135,6 +135,10 @@ void display()
 
 }
 
+void keyFunc(unsigned char key, int x, int y)
+{
+	if (key == 0x1B) { std::cout << "ESC - Quitting" << std::endl; exit(0); }
+}
 void mouseFunc(int button, int state, int x, int y)
 {
 	if ((state == GLUT_DOWN) && ((button == GLUT_LEFT_BUTTON) || (button == GLUT_RIGHT_BUTTON)))
@@ -193,14 +197,14 @@ int main (int argc, char **argv)
 	glutIdleFunc(display);
 	glutReshapeFunc(reshape);
 
+	glutKeyboardFunc(keyFunc);
 	glutMouseFunc(mouseFunc);
 	glutMotionFunc(motionFunc);
 //	glutTimerFunc(OnTimer);
 	//glutCloseFunc(closeFunc);
 
 
-	//TODO Get mocap filename from data
-	char* filename = "";
+	const char* filename = "";
 	yOffset = 0;
 	for (int i=0; i < argc; i++)
 	{
@@ -237,7 +241,7 @@ BOOL Main::OnIdle(LONG lCount)
 void loadFilename (const char* m_lpCmdLine)
 {
  // int mainWindowId;
-  char *pathname = "Data/"; //= (char*) malloc(50);
+  const char *pathname = "Data/"; //= (char*) malloc(50);
   Output3D = new DisplayGL();
 
 

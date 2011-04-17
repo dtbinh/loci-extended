@@ -55,6 +55,8 @@ bool strcompEx(const char *string, const char *strCharSet);
 float sqr(float a);
 //void localPos(const NODE * node, long currentframe, float* pos);
 
+NODE* searchName(NODE*, char*);
+
 void MessageBoxa(const char * message);
 
 inline void SetupChildren(NODE* seg, int children)
