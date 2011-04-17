@@ -1,14 +1,23 @@
 #include "DisplayGL.h"
+#include "ccdFuncs.h"
 #include <iostream>
 #include <cmath>
+
+TARGET *targetList[5];
 
 DisplayGL::DisplayGL() : body(0), header(0), m_pDC(0), lasttime(::GetTickCount()), frames(0)
 {
   MessageBoxa("DisaplayGL Initialiser");
   fps[0] = '\0';
   centre[0] = centre[1] = centre[2] = 0.0f;
+  targetList[0] = new TARGET;
+  targetList[0]->name = "target1";
+  targetList[0]->pos[0] = 0;
+  targetList[0]->pos[1] = 0;
+  targetList[0]->pos[2] = 0;
   Init();
 }
+
 
 DisplayGL::~DisplayGL() {}
 
@@ -39,6 +48,25 @@ void DisplayGL::Init()
  // MessageBoxa("End of DisplayGL.Init");
 }
 
+void setupCCD(NODE *start, TARGET *target)
+{
+	NODE *end = getFirstEndEffector(start);
+	NODE *node = end;
+	std::cout << "setupCCD: root=" << start->name << " target=" << target->name << " end=" << end->name << std::endl;
+	int count = 0;
+	std::cout << distToTarget(end, target) << std::endl;
+	while ((count < 30) && (distToTarget(end, target) > 0.05))
+	{
+		while (node)
+		{
+			std::cout << node->name << std::endl;
+			CCD(node, target);
+			node = node->parent;
+		}
+		node = end;
+		count++;
+	}
+}
 
 void DisplayGL::Draw()
 {
@@ -68,6 +96,12 @@ void DisplayGL::Draw()
 		//	}	
 		//}
   
+  NODE *found = searchName(body, "RightCollar");
+  if (found)
+  {
+  	//std::cout << "FOUND" << std::endl;	  
+	setupCCD(found, targetList[0]);
+  }
 
   glPushMatrix();
 	if (body)
@@ -78,6 +112,7 @@ void DisplayGL::Draw()
   //Draw Positions of end effectors
   
   
+  /*
 	if (body)
 	{
 		for (int i = 0; i < header->noofeffectors; i++)
@@ -85,7 +120,10 @@ void DisplayGL::Draw()
 		{
 			float *pos = new float[3];
 			pos[0] = 0; pos[1] = 0; pos[2] = 0;
-			nodeLocalPos(effectorlist[i], header->currentframe, pos);
+			if (effectorlist[i] != NULL)
+			{
+				nodeLocalPos(effectorlist[i], header->currentframe, pos);
+			}
 
 			std::cout << i << "LocalPos="<< pos[0] << ", " << pos[1] << ", " << pos[2] << "\n" << std::endl;
 			glPushMatrix();
@@ -98,6 +136,7 @@ void DisplayGL::Draw()
 		}
 		
 	}
+	*/
 	
 
   glPopMatrix();
@@ -123,6 +162,7 @@ void DisplayGL::Draw()
 //#define PI 3.141592653f
 void DisplayGL::nodeLocalPos(NODE* seg, long currentframe, float *pos)
 {
+	if (seg == NULL) { std::cout << "error: nodeLocalPos passed null node" << std::endl; return; }
 	std::cout << "SegName = " <<  seg->name ;
 	while (seg->parent->parent)
 	{

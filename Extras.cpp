@@ -145,3 +145,24 @@ void localPos(const NODE* seg, long currentframe, float *pos)
 	return;
 }
 */
+
+
+#include <cstring>
+NODE* searchName(NODE *seg, char *name)
+{
+	if (!strcmp(seg->name, name)) { return seg; } 
+	else
+	{
+		if (seg->noofchildren > 0)
+		{
+			for (int i=0; i< seg->noofchildren; i++)
+			{
+				NODE *f;
+				f = searchName(seg->children[i], name);
+				if (f) { return f; }
+			}
+		} else {
+			 return NULL;
+		}
+	}
+}
