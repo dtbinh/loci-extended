@@ -221,7 +221,7 @@ void radAngleAxisRot(float rotAng, float *axis, float *eulers)
  */
 void calcEndPos(NODE *end, float *pos)
 {
-	std::cout << "calcEndPos" << end->name << std::flush;
+	//std::cout << "calcEndPos" << end->name << std::flush;
 	NODE *thisEnd = end;
 	//Recursively calculate the parent nodes
 	
@@ -245,13 +245,13 @@ void calcEndPos(NODE *end, float *pos)
 	{
 		//Matrix pRotMatT = Matrix(3,3).fill(0);
 		float pRotMatT[9]; 
-		if (isnan(end->euler[0]) || isnan(end->euler[1]) || isnan(end->euler[2])) { std::cout << "IS NAN" << std::endl; return; } 
-		std::cout << end->euler[0] << " " << end->euler[1] << " " << end->euler[2] << std::endl;
-		std::cout << end->name << "degRads " << degRad(end->euler[0]) << " " << degRad(end->euler[1]) << " " << degRad(end->euler[2]) << std::endl;
+		if (isnan(end->euler[0]) || isnan(end->euler[1]) || isnan(end->euler[2])) { return; } 
+		//std::cout << end->euler[0] << " " << end->euler[1] << " " << end->euler[2] << std::endl;
+		//std::cout << end->name << "degRads " << degRad(end->euler[0]) << " " << degRad(end->euler[1]) << " " << degRad(end->euler[2]) << std::endl;
 		fillRotMat(degRad(end->euler[0]), degRad(end->euler[1]), degRad(end->euler[2]), pRotMatT);
 		
-		std::cout << "pRotMatT " ;
-		for (int i=0; i<9; i++) { std::cout << pRotMat[i] << " ";  } std::cout << std::endl;
+		//std::cout << "pRotMatT " ;
+		//for (int i=0; i<9; i++) { std::cout << pRotMat[i] << " ";  } std::cout << std::endl;
 		bool hasParent = false;
 		for (int i=0; i<9; i++)
 		{
@@ -263,7 +263,7 @@ void calcEndPos(NODE *end, float *pos)
 		if (!hasParent)
 		{		
 		   	//pRotMatF = pRotMatT;
-			std::cout << "not has parent" << std::endl;
+			//std::cout << "not has parent" << std::endl;
 			for (int i=0; i<9; i++) { pRotMatF[i] = pRotMatT[i]; }
 		} else { 
 			//pRotMatF = pRotMatT *pRotMat;
@@ -274,7 +274,7 @@ void calcEndPos(NODE *end, float *pos)
 		}
 		//pRotMat = pRotMatF;
 		for (int i=0; i<9; i++) { pRotMat[i] = pRotMatF[i]; }
-		for (int i=0; i<9; i++) { std::cout << pRotMat[i] << " ";  } std::cout << std::endl;
+		//for (int i=0; i<9; i++) { std::cout << pRotMat[i] << " ";  } std::cout << std::endl;
 
 
 		if (end->parent)
@@ -300,12 +300,12 @@ void calcEndPos(NODE *end, float *pos)
 	float h2 = sqrt(posVect[0]*posVect[0] + posVect[1]*posVect[1] + posVect[2]*posVect[2]);
 
 	
-	std::cout << posVect[0] << " " << posVect[1] << " " << posVect[2] << std::endl;
+	//std::cout << posVect[0] << " " << posVect[1] << " " << posVect[2] << std::endl;
 	//std::cout << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl;
 	//assert(h == h2);
-	pos[0] += posVect[0];
-	pos[1] += posVect[1];
-	pos[2] += posVect[2];
+	pos[0] += posVect[0] + end->offset[0];
+	pos[1] += posVect[1] + end->offset[1];
+	pos[2] += posVect[2] + end->offset[2];
 
 	//Simple Trig to get the end vector position of this node.
 	//pos[0] += h*-sin(theta + degRad(end->euler[0]+pThetaX));

@@ -96,11 +96,28 @@ void DisplayGL::Draw()
 		//	}	
 		//}
   
+  /*
   NODE *found = searchName(body, "RightCollar");
   if (found)
   {
   	//std::cout << "FOUND" << std::endl;	  
 	setupCCD(found, targetList[0]);
+  }
+  */
+
+  NODE *found = searchName(body, "Head");
+  if (found)
+  {
+  	//std::cout << "FOUND" << std::endl;	  
+	//setupCCD(found, targetList[0]);
+	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(found, pos);
+	std::cout << "Final head Pos = " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+	glPushMatrix();
+		glTranslatef(pos[0], pos[1], pos[2]);
+		glColor3f(0, 0, 1);
+		glutSolidSphere(0.1, 5, 5);
+	glPopMatrix();
   }
 
   glPushMatrix();
