@@ -9,10 +9,12 @@
 bool* keyStates = new bool[256];
 bool* keySpecialStates = new bool[256];
 
+bool jitterStart = false;
 bool doJac = false;
 bool doLimit = true;
 
 const float PI = 3.14159265;
+int iter = 0;
 
 float atX = 0, atZ = 0; float atY = 2;
 float eyeX = 0; float eyeY = 2.1; float eyeZ = 7;
@@ -29,6 +31,8 @@ struct NODE
 {
 	const char *name;
 	float length[2];
+	float offset[2];
+	int none;
 	double euler;
 	float weight;
 	NODE *parent;
@@ -72,7 +76,8 @@ void reshape (int width, int height)
 
 void setupChain(int);
 
-void keyPressed (unsigned char key, int x, int y) { 
+void keyPressed (unsigned char key, int x, int y) 
+{ 
 	switch (key)
 	{
 		case 'Q': case 0x1b:
@@ -88,6 +93,11 @@ void keyPressed (unsigned char key, int x, int y) {
 			doLimit ^= 1;
 			if (doLimit) { std::cout << "Limit On" << std::endl; } 
 			else { std::cout << "Limit Off" << std::endl; } 
+			break;
+		case 'j':
+			jitterStart^=1;
+			if (doLimit) { std::cout << "Root Movement On" << std::endl;
+			else { std::cout << "Root Movement Off" << std::endl; } 
 			break;
 		case '1':
 			setupChain(1);
@@ -109,8 +119,11 @@ void keyPressed (unsigned char key, int x, int y) {
 			break;
 	}
 }
+
 void keyUp (unsigned char key, int x, int y) { keyStates[key] = false; }
-void keySpecialPressed (int key, int x, int y) { keySpecialStates[key] = true; 
+void keySpecialPressed (int key, int x, int y) 
+{
+   	keySpecialStates[key] = true; 
 
 	float d = 0.1;
 	if (keySpecialStates[GLUT_KEY_LEFT])  { IKPosX -= d; }
@@ -118,12 +131,10 @@ void keySpecialPressed (int key, int x, int y) { keySpecialStates[key] = true;
 	if (keySpecialStates[GLUT_KEY_DOWN])  { IKPosY -= d; }
 	if (keySpecialStates[GLUT_KEY_UP])    { IKPosY += d; }
 }
+
 void keySpecialUp (int key, int x, int y) { keySpecialStates[key] = false; }
 
-void mouseFunc (int button, int state, int x, int y)
-{
-
-}
+void mouseFunc (int button, int state, int x, int y) {}
 float radDeg (float rad) { return rad*180/PI; }
 float degRad (float rad) { return rad*PI/180; }
 
@@ -133,6 +144,7 @@ void evaluateChain(NODE* seg)
 	//std::cout << seg->name << std::endl;
 	glPushMatrix();
 		glColor3f(0.4, 0, 0);
+		glTranslatef(seg->offset[0], seg->offset[1], 0);
 		glRotatef(seg->euler, 0, 0, 1);
 		glBegin(GL_LINE);
 			glVertex3f(0, 0, 0);
@@ -159,6 +171,7 @@ void setupChain(int j)
 			n->name = "addedNode";
 			n->parent = nodeList[noofnodes-1];
 		 	n->length[0] = 0; n->length[1] = 1;
+		 	n->offset[0] = 0; n->offset[1] = 0;
 			n->weight = 1;
 		 	nodeList[noofnodes-1]->child = n;
 		 	nodeList[noofnodes++] = n;
@@ -223,6 +236,16 @@ void setupChain()
 	//std::cout << "n1 Setup" << std::endl;
 	//
 	
+	
+	
+	
+	n1->offset[0] = 0; n1->offset[1] = 0;
+	n2->offset[0] = 0; n2->offset[1] = 0;
+	n3->offset[0] = 0; n3->offset[1] = 0;
+	n4->offset[0] = 0; n4->offset[1] = 0;
+	
+	
+	
 	/*
 	n1->euler = 45;
 	n2->euler = 30;
@@ -278,8 +301,8 @@ void calcEndPos(NODE *end, double *pos)
 	//std::cout << end->name << " h = " << h << ", theta = " << radDeg(theta) << std::endl;
 
 	//Simple Trig to get the end vector position of this node.
-	pos[0] += h*-sin(theta + degRad(end->euler+pTheta));
-	pos[1] += h*cos(theta + degRad(end->euler+pTheta));
+	pos[0] += (h*-sin(theta + degRad(end->euler+pTheta))) +end->offset[0];
+	pos[1] += (h*cos(theta + degRad(end->euler+pTheta)))  +end->offset[1];
 
 	//std::cout << end->name << " End Pos = " << pos[0] << ", " << pos[1] << std::endl;
 
@@ -445,6 +468,26 @@ void CCD(NODE *cur)
 
 }
 
+int dirX = 0;
+int dirY = 0;
+void jitter()
+{
+	NODE *n = nodeList[0];
+	float ox, oy;
+	ox = (rand() % 10) / 100.0 ;
+	oy = (rand() % 10 ) / 100.0 ;
+
+	if (dirX == 1) { ox *= -1; }
+	if (dirY == 1) { oy *= -1; }
+
+	if (n->offset[0] <= -1) { dirX = 0; }
+	if (n->offset[0] >= 1) { dirX = 1; }
+	if (n->offset[1] <= -1) { dirY = 0; }
+	if (n->offset[1] >= 1) { dirY = 1; }
+
+	n->offset[0] += ox;
+	n->offset[1] += oy;
+}
 
 
 void display(void)
@@ -460,13 +503,18 @@ void display(void)
 
 	gluLookAt(eyeX, eyeY, eyeZ, atX, atY, atZ, 0, 1, 0);
 
-	//Centre Sphere
-	glutSolidSphere(0.1, 13, 13);
 
+	//Centre Sphere
+	glPushMatrix();
+		glTranslatef(nodeList[0]->offset[0], nodeList[0]->offset[1], 0);
+		glutSolidSphere(0.1, 13, 13);
+	glPopMatrix();
+
+	//Target
 	glPushMatrix();
 		glColor3f(0, 1, 0);
 		glTranslatef(IKPosX, IKPosY, 0);
-		glutSolidSphere(0.3, 5, 5);
+		glutSolidSphere(0.2, 5, 5);
 	glPopMatrix();
 	glLineWidth(2);
 
@@ -492,14 +540,16 @@ void display(void)
 			CCD(node);
 			node = node->parent;
 		}
-
 	}
 
+
+	if (jitterStart) { if (iter%1 == 0) jitter(); }
 
 	glEnable(GL_BLEND);
 	glPushMatrix();
 		glColor4f(0.9, 0.8, 0.8, 0.05);
 		glTranslatef(0, 0, -0.05);
+		glTranslatef(nodeList[0]->offset[0], nodeList[0]->offset[1], 0);
 		glScalef(1, 1, 0.001);
 		glutSolidSphere(noofnodes, 17, 17);
 	glPopMatrix();
@@ -515,6 +565,7 @@ void display(void)
 	glColor3f(1, 0, 0);
 	glDisable(GL_BLEND);
 
+	iter++;
 	glutSwapBuffers();
 }
 
