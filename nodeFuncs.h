@@ -12,6 +12,7 @@ struct NODE
 	const char *name;
 	float length[3];
 	float euler[3];
+	float offset[3];
 	float weight;
 	NODE *parent;
 	NODE *child;
@@ -242,9 +243,9 @@ void calcEndPos(NODE *end, float *pos)
 	float h2 = sqrt(posVect[0]*posVect[0] + posVect[1]*posVect[1] + posVect[2]*posVect[2]);
 
 	//assert(h == h2);
-	pos[0] += posVect[0];
-	pos[1] += posVect[1];
-	pos[2] += posVect[2];
+	pos[0] += posVect[0] + end->offset[0];
+	pos[1] += posVect[1] + end->offset[1];
+	pos[2] += posVect[2] + end->offset[2];
 
 	//Simple Trig to get the end vector position of this node.
 	//pos[0] += h*-sin(theta + degRad(end->euler[0]+pThetaX));
