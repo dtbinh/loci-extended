@@ -13,6 +13,7 @@ bool* keyStates = new bool[256];
 bool* keySpecialStates = new bool[256];
 
 
+bool jitterStart = false;
 bool doJac = false;
 bool doLimit = false;
 
@@ -83,6 +84,8 @@ void keyPressed (unsigned char key, int x, int y) {
 			doJac ^= 1;		 	break;
 		case 'l':
 			doLimit ^= 1;		break;
+		case 'j':
+			jitterStart ^= 1;	break;
 		case '1':
 			setupChain(1);		break;
 		case '2':
@@ -127,6 +130,7 @@ void evaluateChain(NODE* seg)
 	//std::cout << seg->name << std::endl;
 	glPushMatrix();
 		glColor3f(0.4f, 0, 0);
+		glTranslatef(seg->offset[0], seg->offset[1], seg->offset[2]);
 		glRotatef(seg->euler[2], 0, 0, 1);
 		glRotatef(seg->euler[1], 0, 1, 0);
 		glRotatef(seg->euler[0], 1, 0, 0);
@@ -154,6 +158,7 @@ void setupChain(int j)
 			n->name = "addedNode";
 			n->parent = nodeList[noofnodes-1];
 		 	n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
+		 	n->offset[0] = 0; n->offset[1] = 0; n->offset[2] = 0;
 			n->weight = 1;
 		 	nodeList[noofnodes-1]->child = n;
 		 	nodeList[noofnodes++] = n;
@@ -216,6 +221,11 @@ void setupChain()
 	n4->length[0] = 0; n4->length[1] = 1; n4->length[2] = 0; n4->weight = 1;
 	//std::cout << "n1 Setup" << std::endl;
 	
+	n1->offset[0] = 0; n1->offset[1] = 0; n1->offset[2] = 0;
+	n2->offset[0] = 0; n2->offset[1] = 0; n2->offset[2] = 0;
+	n3->offset[0] = 0; n3->offset[1] = 0; n3->offset[2] = 0;
+	n4->offset[0] = 0; n4->offset[1] = 0; n4->offset[2] = 0;
+
 	/*
 	n1->euler[0] = 45 ;	n1->euler[1] = 0;	n1->euler[2] = 0;
 	n2->euler[0] = 20 ;	n2->euler[1] = 0;	n2->euler[2] = 0;
@@ -232,6 +242,7 @@ void setupChain()
 	nodeList[noofnodes++] = n3; //noofnodes++;
 	nodeList[noofnodes++] = n4; //noofnodes++;
 	//std::cout << "LEaving Exit" << std::endl;
+	/*
 	//
 	NODE *na = new NODE;
 	na->name = "test1";
@@ -306,7 +317,7 @@ void setupChain()
 
 	nh->euler[0] = -80;	nh->euler[1] = 0;	nh->euler[2] = -45;
 	ni->euler[0] = 30;	ni->euler[1] = 20;	ni->euler[2] = 0;
-
+	*/
 
 
 
@@ -484,12 +495,7 @@ void CCD(NODE *cur)
 	}
 	end = oEnd;
 	//std::cout << "t: " << "Target Pos = " << IKPosX << ", " << IKPosY << std::endl;
-	//glPushMatrix();
-	//	glColor3f(0, 0, 1);
-	//	glTranslatef(jpos[0], jpos[1], jpos[2]);
-	//	glutSolidSphere(0.1, 5, 5);
-	//	glColor3f(1, 0, 0);
-	//glPopMatrix();
+	
 
 
 	//ej = vector from joint's rotation point to end effectors end pos
@@ -504,13 +510,15 @@ void CCD(NODE *cur)
    	tj[1] = IKPosY - jpos[1];
    	tj[2] = IKPosZ - jpos[2];
 
-	//std::cout << "ej: = " << ej[0] << ", " << ej[1] << std::endl;
-	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << std::endl;
+	//std::cout << "ej: = " << ej[0] << ", " << ej[1] << ", " << ej[2] << std::endl;
+	//std::cout << "tj: = " << tj[0] << ", " << tj[1] << ", " << tj[2] << std::endl;
 
 	float ejdottj = ej[0]*tj[0] + ej[1]*tj[1] + ej[2]*tj[2];
 	float minejdottj = - ej[0]*tj[0] - ej[1]*tj[1] - ej[2]*tj[2];
 	float ejSqr = sqrt(ej[0]*ej[0] + ej[1]*ej[1] + ej[2]*ej[2]);
 	float tjSqr = sqrt(tj[0]*tj[0] + tj[1]*tj[1] + tj[2]*tj[2]);
+
+        //std::cout << "ejdottj " << ejdottj << std::endl;
 
 	if (tjSqr < 0.05) { return; }
 	float cosA = ejdottj/(ejSqr*tjSqr);
@@ -557,18 +565,22 @@ void CCD(NODE *cur)
 			axis[2] = axisO[2];
 		}
 	}
-	//Set this nodes's axis as the axis for next time
+	//Set this nodes's ax}is as the axis for next time
 	nodeAxisMap[cur] = axis;
+
+        //std::cout << axis[0] << " " << axis[1] << " " << axis[2] << std::endl;
 	
 	//Limit cosA - eliminates rounding errors.
 	cosA = cosA>-1?cosA:-1;
 	cosA = cosA<1?cosA:1;
+        //std::cout << cosA << std::endl;
 	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
 	if (sinA < 0) { rotAng = -rotAng; }
 	//if (axis[2] < 0) { rotAng = -rotAng; }
 	//std::cout << "RotAng: " << radDeg(rotAng) << std::endl;
 	//rotAng *= cur->weight;
+       // std::cout << "rotAng " << rotAng << std::endl;
 
 	float eulers[3];
 	radAngleAxisRot(rotAng, axis, eulers);
@@ -577,6 +589,7 @@ void CCD(NODE *cur)
 	cur->euler[1] += radDeg(eulers[1]);
 	cur->euler[2] += radDeg(eulers[2]);
 
+       // std::cout << cur->euler[0] << " " << cur->euler[1] << " " << cur->euler[2] << std::endl;
 	if (doLimit)
 	{
 		float lim = 180;
@@ -599,6 +612,35 @@ void CCD(NODE *cur)
 
 }
 
+int dirX = 0;
+int dirY = 0;
+int dirZ = 0;
+void jitter()
+{
+	NODE *n = nodeList[0];
+	float ox, oy, oz;
+	ox = (rand() % 10) / 100.0 ;
+	oy = (rand() % 10 ) / 140.0 ;
+	oz = (rand() % 10 ) / 200.0 ;
+
+	if (dirX == 1) { ox *= -1; }
+	if (dirY == 1) { oy *= -1; }
+	if (dirZ == 1) { oz *= -1; }
+
+	if (n->offset[0] <= -1) { dirX = 0; }
+	if (n->offset[0] >= 1) { dirX = 1; }
+	if (n->offset[1] <= -1) { dirY = 0; }
+	if (n->offset[1] >= 1) { dirY = 1; }
+	if (n->offset[2] <= -1) { dirZ = 0; }
+	if (n->offset[2] >= 1) { dirZ = 1; }
+
+	n->offset[0] += ox;
+	n->offset[1] += oy;
+	n->offset[2] += oz;
+}
+
+
+int iter = 0;
 void display(void)
 {
 	glEnable(GL_DEPTH_TEST);
@@ -612,7 +654,10 @@ void display(void)
 	gluLookAt(eyeX, eyeY, eyeZ, atX, atY, atZ, 0, 1, 0);
 
 	//Centre Sphere
-	glutSolidSphere(0.1, 13, 13);
+	glPushMatrix();
+		glTranslatef(nodeList[0]->offset[0], nodeList[0]->offset[1], nodeList[0]->offset[2]);
+		glutSolidSphere(0.1, 13, 13);
+	glPopMatrix();
 
 	glPushMatrix();
 		glColor3f(0, 1, 0);
@@ -623,7 +668,6 @@ void display(void)
 
 
 	evaluateChain(nodeList[0]);
-
 	
 	if (doJac)
 	{
@@ -648,9 +692,12 @@ void display(void)
 			}
 			node = enode;
 			count++;
+                        std::cout << "count = " << count << " d = " << distToTarget(enode) << std::endl;
 		}
 
 	}
+
+	if (jitterStart) { if (iter%1 == 0) jitter(); }
 
 	float fs = 4;
 	glEnable(GL_BLEND);
@@ -680,8 +727,8 @@ void display(void)
 	glColor3f(1, 0, 0);
 	glDisable(GL_BLEND);
 
+	iter++;
 	glutSwapBuffers();
-	sleep(0.5);
 }
 
 
@@ -694,7 +741,7 @@ int main (int argc, char **argv) {
 	glutCreateWindow("IK Tests 3D");
 	//glLineWidth(6);
 	
-	setupChain();
+        setupChain();
 
 	init();
 

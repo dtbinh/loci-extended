@@ -3,8 +3,9 @@
 //#include <GL/glew.h>
 #include <GL/glut.h>
 
-//#include <octave/oct.h>
+#include <octave/oct.h>
 #include "nodeFuncsMulti.h"
+#include "setupFigure.h"
 #include <iostream>
 #include <cmath>
 
@@ -24,7 +25,7 @@ GLfloat mShininess[] = {128};
 
 int noofnodes = 0;
 //int nooftargets = 0;
-NODE *nodeList[10];
+NODE *nodeList[30];
 TARGET *targetList[10];
 
 void init (void)
@@ -100,9 +101,10 @@ void mouseFunc (int button, int state, int x, int y)
 void evaluateChain(NODE* seg)
 {
 	if (seg == NULL ) { return; }
-	//std::cout << seg->name << std::endl;
+	//std::cout << seg->name << " " << seg->noofchildren;
 	glPushMatrix();
 		glColor3f(0.4f, 0, 0);
+		glTranslatef(seg->offset[0], seg->offset[1], seg->offset[2]);
 		glRotatef(seg->euler[2], 0, 0, 1);
 		glRotatef(seg->euler[1], 0, 1, 0);
 		glRotatef(seg->euler[0], 1, 0, 0);
@@ -131,49 +133,43 @@ void increaseChildren(NODE* seg, int noofchildren)
 
 void setupChain()
 {
-	std::cout << "Setting up Chain" << std::endl;
+std::cout << "Setting up Chain" << std::endl;
 	NODE *n1 = new NODE;
-	NODE *n2 = new NODE;
-	NODE *n3 = new NODE;
+	//NODE *n2 = new NODE;
+	//NODE *n3 = new NODE;
 	NODE *n4 = new NODE;
-	NODE *n3b = new NODE;
+	//NODE *n3b = new NODE;
 	NODE *n4b = new NODE;
 
-	n1->noofchildren = 1; n1->target = NULL;
-	n2->noofchildren = 2; n2->target = NULL;
-	n3->noofchildren = 1; n3->target = NULL;
-	n3b->noofchildren = 1; n3b->target = NULL;
+	n1->noofchildren = 2; n1->target = NULL;
+	//n2->noofchildren = 2; n2->target = NULL;
+	//n3->noofchildren = 1; n3->target = NULL;
+	//n3b->noofchildren = 1; n3b->target = NULL;
 	n4->noofchildren = 0; n4->target = NULL;
 	n4b->noofchildren = 0; n4b->target = NULL;
 
 	std::cout << "Setting up links" << std::endl;
 
-	increaseChildren(n1,  n1->noofchildren);
-	increaseChildren(n2,  n2->noofchildren);
-	increaseChildren(n3,  n3->noofchildren);
-	increaseChildren(n3b, n3b->noofchildren);
-	increaseChildren(n4,  n4->noofchildren);
+	increaseChildren(n1, n1->noofchildren);
+	//increaseChildren(n2, n2->noofchildren);
+	//increaseChildren(n3, n3->noofchildren);
+	//increaseChildren(n3b, n3b->noofchildren);
+	increaseChildren(n4, n4->noofchildren);
 	increaseChildren(n4b, n4b->noofchildren);
 
-	n1->name = "root"; n1->parent = NULL;
-	//n1->target = targetList[0];
-	n1->child[0] = n2; //n1->child[1] = n3b; 
-
-	n2->name = "lower"; n2->parent = n1;
-	n2->child[0] = n3; n2->child[1] = n3b;  
-
-	n3->name = "upper"; n3->child[0] = n4; n3->parent = n2;
-	n3b->name = "LUPPER"; n3b->child[0] = n4b; n3b->parent = n2;
-	n4->name = "hand";  n4->child[0] = NULL; n4->parent = n3; n4->target = targetList[0];
-	n4b->name = "LHAND";  n4b->child[0] = NULL; n4b->parent = n3b; n4b->target = targetList[1];
+	n1->name = "root"; n1->child[0] = n4; n1->child[1] = n4b; n1->parent = NULL;
+	//n3->name = "upper"; n3->child[0] = n4; n3->parent = n1;
+	//n3b->name = "LUPPER"; n3b->child[0] = n4b; n3b->parent = n2;
+	n4->name = "hand";  n4->child[0] = NULL; n4->parent = n1; n4->target = targetList[0];
+	n4b->name = "LHAND";  n4b->child[0] = NULL; n4b->parent = n1; n4b->target = targetList[1];
 
 
 	std::cout << "Setting chain Lens" << std::endl;
 
 	n1->length[0] = 0; n1->length[1] = 1;  
-	n2->length[0] = 0; n2->length[1] = 1;  
-	n3->length[0] = 0; n3->length[1] = 1;  
-	n3b->length[0] = 0; n3b->length[1] = 1;  
+	//n2->length[0] = 0; n2->length[1] = 1;  
+	//n3->length[0] = 0; n3->length[1] = 1;  
+	//n3b->length[0] = 0; n3b->length[1] = 1;  
 	n4->length[0] = 0; n4->length[1] = 1;  
 	n4b->length[0] = 0; n4b->length[1] = 1;  
 	//std::cout << "n1 Setup" << std::endl;
@@ -185,25 +181,17 @@ void setupChain()
 	n4->euler = 30;
 	*/
 
-	n1->euler[0] = 45;	n1->euler[1] = 0;	n1->euler[2] = 45; 
-	n2->euler[0] = 0;	n2->euler[1] = 0;	n2->euler[2] = 0; 
-	n3->euler[0] = 0;	n3->euler[1] = 0;	n3->euler[2] = 0; 
-	n3b->euler[0] = 0;	n3b->euler[1] = 0;	n3b->euler[2] = 0; 
+	n1->euler[0] = 0;	n1->euler[1] = 0;	n1->euler[2] = 0; 
+	//n2->euler[0] = 0;	n2->euler[1] = 0;	n2->euler[2] = 0; 
+	//n3->euler[0] = 0;	n3->euler[1] = 0;	n3->euler[2] = 0; 
+	//n3b->euler[0] = 0;	n3b->euler[1] = 0;	n3b->euler[2] = 0; 
 	n4->euler[0] = 0;	n4->euler[1] = 0;	n4->euler[2] = 0; 
 	n4b->euler[0] = 0;	n4b->euler[1] = 0;	n4b->euler[2] = 0; 
-
-	n1->offset[0] = 0;	n1->offset[1] = 0;	n1->offset[2] = 0; 
-	n2->offset[0] = 0;	n2->offset[1] = 0;	n2->offset[2] = 0; 
-	n3->offset[0] = 0;	n3->offset[1] = 0;	n3->offset[2] = 0; 
-	n3b->offset[0] = 0;	n3b->offset[1] = 0;	n3b->offset[2] = 0; 
-	n4->offset[0] = 0;	n4->offset[1] = 0;	n4->offset[2] = 0; 
-	n4b->offset[0] = 0;	n4b->offset[1] = 0;	n4b->offset[2] = 0; 
-	
 	
 	nodeList[noofnodes++] = n1; 
-	nodeList[noofnodes++] = n2; 
-	nodeList[noofnodes++] = n3; 
-	nodeList[noofnodes++] = n3b;
+	//nodeList[noofnodes++] = n2; 
+	//nodeList[noofnodes++] = n3; 
+	//nodeList[noofnodes++] = n3b;
 	nodeList[noofnodes++] = n4; 
 	nodeList[noofnodes++] = n4b;
 	//std::cout << "LEaving Exit" << std::endl;
@@ -281,27 +269,6 @@ void setupChainLonger()
 	return;
 }
 
-float distToTarget(NODE *node)
-{
-	if (node == NULL) { return 0; }
-	float a = 0;
-	TARGET **tList; int nooftar = 0;
-	tList = (TARGET**) malloc(sizeof(TARGET*) * nooftargets);
-	getTarget (node, &nooftar, tList);
-	for (int i = 0; i< nooftar; i++)
-	{
-		float b,c,d;
-		float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
-		calcEndPos(node, pos);
-		b = pos[0] - tList[i]->pos[0];
-		c = pos[1] - tList[i]->pos[1];
-		d = pos[2] - tList[i]->pos[2];
-		//std::cout << b << " " << c << " " << d << " ";
-		a += sqrt(b*b + c*c + d*d);
-	}
-	free(tList);
-	return a;
-}
 
 void display(void)
 {
@@ -316,10 +283,7 @@ void display(void)
 
 	gluLookAt(eyeX, eyeY, eyeZ, atX, atY, atZ, 0, 1, 0);
 
-
-	//Centre Sphere
-	glutSolidSphere(0.1, 17, 17);
-
+	//Display Targets
 	for (int i=0; i < nooftargets; i++)
 	{
 		glPushMatrix();
@@ -343,34 +307,57 @@ void display(void)
 	int noofeO = 0;
 	getEndEffector(nodeList[0], &noofe, nList);
 
-	int count = 0;
-	float d = 0;
+	//Find the end effectors
+	//If there is one for the leftHand - Perform CCD on the chain up to the collar
 	for (int i=0; i<noofe; i++)
 	{
-		d += distToTarget(nList[i]);
-	}
-
-	while ((count < 30) && d > 0.06)
-	{
-		CCD(nodeList[5]);
-		CCD(nodeList[3]);
-		CCD(nodeList[4]);
-		CCD(nodeList[2]);
-		CCD(nodeList[1]);
-		CCD(nodeList[0]);
-		count ++;
-
-		d = 0;
-		for (int i=0; i<noofe; i++)
+		if (nList[i]->name == "rightHand")
 		{
-			d += distToTarget(nList[i]);
+			float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+			calcEndPos(nList[i], pos);
+			glPushMatrix();
+				glTranslatef(pos[0], pos[1], pos[2]);
+				glutSolidSphere(0.05, 5, 5);
+			glPopMatrix();
+			CCD(nList[i]);
+			CCD(nList[i]->parent);
+			CCD(nList[i]->parent->parent);
+			CCD(nList[i]->parent->parent->parent);
+			CCD(nList[i]->parent->parent->parent->parent);
 		}
+		if (nList[i]->name == "leftHand")
+		{
+			float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+			calcEndPos(nList[i], pos);
+			glPushMatrix();
+				glTranslatef(pos[0], pos[1], pos[2]);
+				glutSolidSphere(0.05, 5, 5);
+			glPopMatrix();
+			CCD(nList[i]);
+			CCD(nList[i]->parent);
+			CCD(nList[i]->parent->parent);
+			//CCD(nList[i]->parent->parent->parent);
+		}		
 	}
-	std::cout << "Count " << count << " dist: " << d << std::endl;
-	
-	//exit(0);
-	
+	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(nodeList[16], pos);
+	glPushMatrix();
+		glColor3f(0, 0, 1);
+		glTranslatef(pos[0], pos[1], pos[2]);
+		glutSolidSphere(0.06, 5, 5);
+	glPopMatrix();
+
+	//CCD(nodeList[5]);
+	//CCD(nodeList[4]);
+	//CCD(nodeList[3]);
+	//CCD(nodeList[2]);
+	//CCD(nodeList[1]); 
+	//CCD(nodeList[0]);
+	//std::cout << std::endl;
+
+
 	//std::cout << "EVALUATEING CHAIN" << std::endl;
+	
 	evaluateChain(nodeList[0]);
 
 
@@ -401,11 +388,11 @@ void setupTargets()
 	TARGET *t1 = new TARGET;
 	TARGET *t2 = new TARGET;
 
-	t1->name = "RHandTarget";
-	t1->pos[0] = 0.8; t1->pos[1] = 2.2; t1->pos[2] = 1;
+	t1->name = "LHandTarget";
+	t1->pos[0] = 2; t1->pos[1] = 3; t1->pos[2] = 1;
 
-	t2->name = "LHandTarget";
-	t2->pos[0] = -0.8; t2->pos[1] = 2.2; t2->pos[2] = 0;
+	t2->name = "RHandTarget";
+	t2->pos[0] = -2; t2->pos[1] = 3; t2->pos[2] = 1;
 
 	targetList[nooftargets++] = t1;
 	targetList[nooftargets++] = t2;
@@ -420,8 +407,9 @@ int main (int argc, char **argv) {
 	//glLineWidth(6);
 	
 	setupTargets();
-	setupChain();
-	std::cout << "Ended setup Chain" << std::endl;
+	//setupChain();
+	setupFigure(nodeList, noofnodes, targetList);
+	std::cout << "Figure setup: " << noofnodes << " nodes"<< std::endl;
 
 	init();
 
