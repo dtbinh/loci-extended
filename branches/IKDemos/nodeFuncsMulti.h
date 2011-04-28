@@ -23,6 +23,9 @@ struct NODE
 	NODE **child;
 	int noofchildren;
 	TARGET *target;
+	float limXmin; float limXmax;
+	float limYmin; float limYmax;
+	float limZmin; float limZmax;
 };
 
 typedef std::map<NODE*, float*> NodeAxisMap;
@@ -254,7 +257,7 @@ void getTarget(NODE *cur, int *nooftargets, TARGET **retList)
 
 void CCD(NODE *cur)
 {
-	std::cout << cur->name << std::endl;
+	//std::cout << cur->name << std::endl;
 	if (!cur) { return; }
 	NODE **eList; int noofends= 0;
 	eList = (NODE**) malloc(sizeof(NODE*) * nooftargets);
@@ -297,7 +300,6 @@ void CCD(NODE *cur)
 		//std::cout << nooftar<< " targets for " << cur->name << std::flush;
 		for (int i=0; i< nooftar; i++)
 		{	
-			std::cout << i;
 			tj[0] += tList[i]->pos[0] ;
 			tj[1] += tList[i]->pos[1] ;
 			tj[2] += tList[i]->pos[2] ;
@@ -410,14 +412,18 @@ void CCD(NODE *cur)
 
 	
 	float lim = 180;
-	/*
-	if (cur->euler[0] > lim) { cur->euler[0] = lim; }
-	if (cur->euler[0] < -lim) { cur->euler[0] = -lim; }
-	if (cur->euler[1] > lim) { cur->euler[1] = lim; }
-	if (cur->euler[1] < -lim) { cur->euler[1] = -lim; }
-	if (cur->euler[2] > lim) { cur->euler[2] = lim; }
-	if (cur->euler[2] < -lim) { cur->euler[2] = -lim; }
-	*/
+	
+	if ((cur->limXmax) &&(cur->euler[0] > cur->limXmax)) { cur->euler[0] = cur->limXmax; }
+	if ((cur->limXmin) &&(cur->euler[0] < cur->limXmin)) { cur->euler[0] = cur->limXmin; }
+	if ((cur->limYmax) &&(cur->euler[1] > cur->limYmax)) { cur->euler[1] = cur->limYmax; }
+	if ((cur->limYmin) &&(cur->euler[1] < cur->limYmin)) { cur->euler[1] = cur->limYmin; }
+	if ((cur->limZmax) &&(cur->euler[2] > cur->limZmax)) { cur->euler[2] = cur->limZmax; }
+	if ((cur->limZmin) &&(cur->euler[2] < cur->limZmin)) { cur->euler[2] = cur->limZmin; }
+	//if (cur->euler[0] < -lim) { cur->euler[0] = -lim; }
+	//if (cur->euler[1] > lim) { cur->euler[1] = lim; }
+	//if (cur->euler[1] < -lim) { cur->euler[1] = -lim; }
+	//if (cur->euler[2] > lim) { cur->euler[2] = lim; }
+	//if (cur->euler[2] < -lim) { cur->euler[2] = -lim; }
 	
 	//std::cout << cur->name << " " << cur->euler[0] << " " << cur->euler[1] << " " << cur->euler[2] << std::endl;
 
