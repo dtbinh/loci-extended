@@ -101,13 +101,29 @@ void mouseFunc (int button, int state, int x, int y)
 void evaluateChain(NODE* seg)
 {
 	if (seg == NULL ) { return; }
-	//std::cout << seg->name << " " << seg->noofchildren;
+	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(seg, pos);
+	//std::cout << seg->name << " "<< pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 	glPushMatrix();
-		glColor3f(0.4f, 0, 0);
 		glTranslatef(seg->offset[0], seg->offset[1], seg->offset[2]);
 		glRotatef(seg->euler[2], 0, 0, 1);
 		glRotatef(seg->euler[1], 0, 1, 0);
 		glRotatef(seg->euler[0], 1, 0, 0);
+		if (1)
+		{
+			float len = 0.1;
+			glBegin(GL_LINES);
+				glColor3f(0, 1, 0);
+				glVertex3f(0, 0, 0);
+				glVertex3f(len, 0, 0);
+			glEnd();
+			glBegin(GL_LINES);
+				glColor3f(0, 0, 1);
+				glVertex3f(0, 0, 0);
+				glVertex3f(0, 0, len);
+			glEnd();
+		}
+		glColor3f(0.4f, 0, 0);
 		glBegin(GL_LINES);
 			glVertex3f(0, 0, 0);
 			glVertex3f(seg->length[0], seg->length[1], seg->length[2]);
@@ -319,11 +335,10 @@ void display(void)
 				glTranslatef(pos[0], pos[1], pos[2]);
 				glutSolidSphere(0.05, 5, 5);
 			glPopMatrix();
-			CCD(nList[i]);
-			CCD(nList[i]->parent);
-			CCD(nList[i]->parent->parent);
+			//CCD(nList[i]);
+			//CCD(nList[i]->parent);
+			//CCD(nList[i]->parent->parent);
 			CCD(nList[i]->parent->parent->parent);
-			CCD(nList[i]->parent->parent->parent->parent);
 		}
 		if (nList[i]->name == "leftHand")
 		{
@@ -333,19 +348,12 @@ void display(void)
 				glTranslatef(pos[0], pos[1], pos[2]);
 				glutSolidSphere(0.05, 5, 5);
 			glPopMatrix();
-			CCD(nList[i]);
-			CCD(nList[i]->parent);
-			CCD(nList[i]->parent->parent);
-			//CCD(nList[i]->parent->parent->parent);
+			//CCD(nList[i]);
+			//CCD(nList[i]->parent);
+			//CCD(nList[i]->parent->parent);
+			////CCD(nList[i]->parent->parent->parent);
 		}		
 	}
-	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
-	calcEndPos(nodeList[16], pos);
-	glPushMatrix();
-		glColor3f(0, 0, 1);
-		glTranslatef(pos[0], pos[1], pos[2]);
-		glutSolidSphere(0.06, 5, 5);
-	glPopMatrix();
 
 	//CCD(nodeList[5]);
 	//CCD(nodeList[4]);

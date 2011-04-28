@@ -1,8 +1,10 @@
 //COMPILE WITH: mkoctfile -lGL -lglut --link-stand-alone IKtest.cpp -o IKtest && ./IKtest
 #include <GL/glut.h>
+#include <boost/timer.hpp>
 
 #include <octave/oct.h>
 #include "nodeFuncs.h"
+#include <time.h>
 
 #include <iostream>
 #include <cmath>
@@ -11,6 +13,7 @@
 bool* keyStates = new bool[256]; 
 
 bool* keySpecialStates = new bool[256];
+	int AvgCount = 0; float AvgDist = 0; double AvgTime = 0; int SumCount = 0;
 
 
 bool jitterStart = false;
@@ -70,6 +73,15 @@ void reshape (int width, int height)
 	glMatrixMode(GL_MODELVIEW);
 }
 
+int tPi = 0;
+float tP[30];
+void advanceTarget()
+{
+	IKPosX = tP[tPi++];
+	IKPosY = tP[tPi++];
+	IKPosZ = tP[tPi++];
+}
+
 void setupChain(int);
 
 void keyPressed (unsigned char key, int x, int y) { 
@@ -86,6 +98,15 @@ void keyPressed (unsigned char key, int x, int y) {
 			doLimit ^= 1;		break;
 		case 'j':
 			jitterStart ^= 1;	break;
+		case 'r':
+			AvgCount = 0; AvgDist = 0; AvgTime = 0; SumCount = 0;
+			break;
+		case 'n':
+	std::cout << "Avgs: count = " << AvgCount/SumCount ;
+	std::cout << "\t d = " << AvgDist/SumCount;
+	std::cout << "\t Time = " << AvgTime/SumCount << std::endl;
+			AvgCount = 0; AvgDist = 0; AvgTime = 0; SumCount = 0;
+			advanceTarget();	break;
 		case '1':
 			setupChain(1);		break;
 		case '2':
@@ -443,9 +464,9 @@ bool jacobian(NODE *node)
 */
 	ColumnVector NewTH = ColumnVector(noofnodes);
 	ColumnVector W = ColumnVector(noofnodes).fill(1);
-	std::cout << J.pseudo_inverse()*dX << std::endl;
+	//std::cout << J.pseudo_inverse()*dX << std::endl;
 	NewTH = (J.pseudo_inverse()*dX*W);
-	std::cout << TH << " + " << NewTH << std::endl;
+	//std::cout << TH << " + " << NewTH << std::endl;
 	
 
 	//Update node angles.
@@ -480,7 +501,6 @@ bool jacobian(NODE *node)
 void CCD(NODE *cur)
 {
 	if (!cur) { return; }
-	std::cout << cur->name << std::endl;
 	NODE *end = getEndEffector(nodeList[0]);
 	NODE *oEnd = end;
 	float epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
@@ -667,22 +687,25 @@ void display(void)
 	glLineWidth(2);
 
 
-	evaluateChain(nodeList[0]);
+	if (jitterStart) { if (iter%1 == 0) jitter(); }
 	
+	struct timeval gstart, gend;
+	double mtime,seconds,nseconds;
+	gettimeofday(&gstart, NULL);
+	NODE *enode = getEndEffector(nodeList[0]);
+	SumCount = 1;
+	int count = 0;
 	if (doJac)
 	{
 		bool c = false;
-		int count = 0;
-		while ((count < 30) && (c == false))
+		while ((count < 30) && (distToTarget(enode) > 0.05))
 		{
-			count++;
 			c = jacobian(nodeList[0]);
+			count++;
 		}
 	} else {
 		NODE *node = getEndEffector(nodeList[0]);
-		NODE *enode = node;
 		//while ((node) && (distToTarget(enode) > 0.05))
-		int count = 0;
 		while ((count < 30) && (distToTarget(enode) > 0.05))
 		{
 			while (node)
@@ -692,12 +715,27 @@ void display(void)
 			}
 			node = enode;
 			count++;
-                        std::cout << "count = " << count << " d = " << distToTarget(enode) << std::endl;
 		}
+	}
+	if ( count > 0 ){
+	//SumCount++;
+	AvgCount += count; 
+	AvgDist += distToTarget(enode);
+	 gettimeofday(&gend, NULL);
 
+		seconds = gend.tv_sec - gstart.tv_sec;
+		nseconds = gend.tv_usec - gstart.tv_usec;
+		mtime = ((seconds)*1000 + nseconds/1000.0 ) + 0.5;
+
+	AvgTime += mtime;
+
+	//std::cout << "Avgs: count = " << AvgCount/SumCount ;
+	//std::cout << "\t d = " << AvgDist/SumCount;
+	//std::cout << "\t Time = " << AvgTime/SumCount << std::endl;
 	}
 
-	if (jitterStart) { if (iter%1 == 0) jitter(); }
+
+	evaluateChain(nodeList[0]);
 
 	float fs = 4;
 	glEnable(GL_BLEND);
@@ -709,12 +747,14 @@ void display(void)
 		glVertex3f(-fs, 0, 0);
 	glEnd();
 
+	/*
 	glPushMatrix();
 		glColor4f(0.9f, 0.8f, 0.8f, 0.05f);
 		//glTranslatef(0, 0, -0.05f);
 		glScalef(1, 1, 0.001f);
 		glutSolidSphere(noofnodes, 17, 17);
 	glPopMatrix();
+	*/
 
 
 	glColor4f(0.2f, 0.8f, 0.8f, 0.3f);
@@ -743,6 +783,16 @@ int main (int argc, char **argv) {
 	
         setupChain();
 
+tP[0] = 2; tP[1] = 2; tP[2] = 2;
+tP[3] = -2; tP[4] = 1; tP[5] = 1;
+tP[6] = -2; tP[7] = 1; tP[8] = 2;
+tP[9] = 2; tP[10] = 1; tP[11] = 1;
+tP[12] = 2; tP[13] = 1; tP[14] = 2;
+tP[15] = 0; tP[16] = 0; tP[17] = -2;
+tP[18] = 2; tP[19] = 0; tP[20] = -2;
+tP[21] = 4; tP[22] = 0; tP[23] = -2;
+tP[24] = 0; tP[25] = 2; tP[26] = -2;
+tP[27] = 0; tP[28] = 0; tP[29] = 0;
 	init();
 
 	glutDisplayFunc(display);
