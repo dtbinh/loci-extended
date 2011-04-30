@@ -58,6 +58,7 @@ public:
   DisplayGL();
   ~DisplayGL();
   void SetupSegments(NODE* segs, MOCAPHEADER* header, NODE** effectorlist);  // Used to pass the display a body structure that holds all of the required information
+  void moveTarget(unsigned char key);
   void Draw();                                          // Redraws the 3D object
   MOCAPHEADER* header;
 

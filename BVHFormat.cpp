@@ -227,7 +227,7 @@ bool BVHFormat::ImportData(const char *filename)
                   curnode->freuler[header->currentframe][zpos] = (float) atof(line[0]);
 
 
-				  calcFLSpace(curnode, header->currentframe);
+				  //calcFLSpace(curnode, header->currentframe);
                   curnode->scale[header->currentframe] = 1.0f;
                   curnode = nodelist[++index];
                   endsite = false;
@@ -241,7 +241,7 @@ bool BVHFormat::ImportData(const char *filename)
                 curnode->freuler[header->currentframe][zpos] = (float) atof(line[0]);
                 curnode->scale[header->currentframe] = 1.0f;
 
-				calcFLSpace(curnode, header->currentframe);
+				//calcFLSpace(curnode, header->currentframe);
 				
                 if (index+1 < header->noofsegments)
                   curnode = nodelist[++index];
@@ -312,6 +312,7 @@ bool BVHFormat::ImportData(const char *filename)
   
 }
 
+/*
 void BVHFormat::calcFLSpace(NODE* curnode, int currentframe)
 {
  // std::cout << "Calculating flspace " << curnode->name;
@@ -334,10 +335,11 @@ void BVHFormat::calcFLSpace(NODE* curnode, int currentframe)
   y += curnode->offset[1]; x+= curnode->froset[currentframe][1];
   z += curnode->offset[2]; x+= curnode->froset[currentframe][2];
 
-  curnode->flspace[currentframe][0] = x; 
-  curnode->flspace[currentframe][1] = y; 
-  curnode->flspace[currentframe][2] = z;
+  //curnode->flspace[currentframe][0] = x; 
+  //curnode->flspace[currentframe][1] = y; 
+  //curnode->flspace[currentframe][2] = z;
 }
+*/
 
 
 

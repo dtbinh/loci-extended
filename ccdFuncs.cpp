@@ -221,9 +221,9 @@ void radAngleAxisRot(float rotAng, float *axis, float *eulers)
  */
 void calcEndPos(NODE *end, float *pos)
 {
-	//std::cout << "calcEndPos" << end->name << std::flush;
 	NODE *thisEnd = end;
 	//Recursively calculate the parent nodes
+
 	
 	if (end->parent != NULL)
 	{
@@ -318,7 +318,152 @@ void calcEndPos(NODE *end, float *pos)
 }
 
 
+void calcEndPos(NODE *end, float *pos, int frame)
+{
+	//std::cout << "calcEndPos" << end->name << std::flush;
+	NODE *thisEnd = end;
+	//Recursively calculate the parent nodes
+	
+	if (end->parent != NULL)
+	{
+		calcEndPos(end->parent, pos, frame);
+	} 
+	else
+	{
+		pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	}
+	//Iteratively get the orientation given the parent nodes
+	
+	//Matrix pRotMatF = Matrix(3,3).fill(0);
+	//Matrix pRotMat = Matrix(3,3).fill(0);
+	float pRotMatF[9];
+	float pRotMat[9];
+	for (int i=0; i<9; i++) { pRotMat[i] = 0; pRotMatF[i] = 0; }
 
+	do 
+	{
+		//Matrix pRotMatT = Matrix(3,3).fill(0);
+		float pRotMatT[9]; 
+		float pRotMatfrT[9]; 
+		if (isnan(end->euler[0]) || isnan(end->euler[1]) || isnan(end->euler[2])) { return; } 
+		if (isnan(end->freuler[frame][0]) || isnan(end->freuler[frame][1]) || isnan(end->freuler[frame][2])) { return; } 
+
+		fillRotMat(degRad(end->euler[0]), degRad(end->euler[1]), degRad(end->euler[2]), pRotMatT);
+		fillRotMat(degRad(end->freuler[frame][0]), degRad(end->freuler[frame][1]), degRad(end->freuler[frame][2]), pRotMatfrT);
+		
+		bool hasParent = false;
+		for (int i=0; i<9; i++)
+		{
+			if (pRotMat[i] != 0) { hasParent = true; }
+		}
+
+		if (!hasParent)
+		{		
+		   	//pRotMatF = pRotMatT;
+			for (int i=0; i<9; i++) { 
+				if (! mult(pRotMatfrT, 3, 3, pRotMatT, 3, 3, pRotMatF) )
+				//pRotMatF[i] = pRotMatT[i]; 
+				{
+					std::cout << "Mult Fail: pRotMatfrT*pRotMatT" << std::endl;
+				}
+			}
+		} else { 
+			//pRotMatF = pRotMatT *pRotMat;
+			float pRotMattF[9];
+			if (! mult(pRotMatT, 3, 3, pRotMat, 3, 3, pRotMattF) )
+			{
+				std::cout << "Mult Fail: pRotMatT*pRotMat" << std::endl;
+			}
+			if (! mult(pRotMatfrT, 3, 3, pRotMattF, 3, 3, pRotMatF) )
+			{
+				std::cout << "Mult Fail: pRotMatfrT*pRotMattF" << std::endl;
+			}
+		}
+		//pRotMat = pRotMatF;
+		for (int i=0; i<9; i++) { pRotMat[i] = pRotMatF[i]; }
+
+		if (end->parent)
+		 { end = end->parent;	}
+		else { end = NULL; }
+	} while (end);
+	end = thisEnd;
+
+	float lenVect[3];
+	float posVect[3];
+
+	//std::cout << "Frame Scale: " << end->scale[frame] << std::endl;
+
+	lenVect[0] = end->length[0]*end->scale[frame];
+	lenVect[1] = end->length[1]*end->scale[frame];
+	lenVect[2] = end->length[2]*end->scale[frame];
+
+	if (!mult(pRotMatF, 3, 3, lenVect, 3, 1, posVect) ) {
+		 std::cout << "Mult Fail: pRotMatF*lenVect" << std::endl;
+	}
+	//posVect = pRotMatF*lenVect;
+
+
+	float h = sqrt(end->length[0]*end->length[0] + end->length[1]*end->length[1] + end->length[2]*end->length[2]);
+	float h2 = sqrt(posVect[0]*posVect[0] + posVect[1]*posVect[1] + posVect[2]*posVect[2]);
+
+	
+	//std::cout << posVect[0] << " " << posVect[1] << " " << posVect[2] << std::endl;
+	//std::cout << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl;
+	//assert(h == h2);
+	pos[0] += posVect[0] + end->offset[0] + end->froset[frame][0];
+	pos[1] += posVect[1] + end->offset[1] + end->froset[frame][1];
+	pos[2] += posVect[2] + end->offset[2] + end->froset[frame][2];
+
+
+	//Simple Trig to get the end vector position of this node.
+	//pos[0] += h*-sin(theta + degRad(end->euler[0]+pThetaX));
+	//pos[1] += h*cos(theta + degRad(end->euler[0]+pThetaX));
+	//pos[2] += 0; 
+
+	//std::cout << end->name << " End Pos = " << pos[0] << ", " << pos[1] << std::endl;
+
+	return;
+}
+
+void getTarget(NODE *cur, int *nooftargets, TARGET **retList)
+{
+	//std::cout << "G-t for " << cur->name << " - " << std::flush;
+	//std::cout << "nooftargets:" << *nooftargets << " " << std::flush;
+	if (cur->target != NULL) {
+		//std::cout << "target found " << cur->target->name << std::endl;
+		//std::cout << "nooft set " << retList[0] << " " << cur->target << std::endl;
+	   	retList[*nooftargets] = cur->target;
+	   	*nooftargets += 1;
+	   	return;
+   	}
+	for (int i = 0; i< cur->noofchildren; i++)
+	{
+		getTarget(cur->children[i], nooftargets, retList);
+	}
+}
+
+float distToTarget(NODE *node)
+{
+	if (node == NULL) { return 0; }
+	float a = 0;
+	TARGET **tList; int nooftar = 0;
+	int nooftargets = 5;
+	tList = (TARGET**) malloc(sizeof(TARGET*) * nooftargets);
+	getTarget (node, &nooftar, tList);
+	for (int i = 0; i< nooftar; i++)
+	{
+		float b,c,d;
+		float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+		calcEndPos(node, pos);
+		b = pos[0] - tList[i]->pos[0];
+		c = pos[1] - tList[i]->pos[1];
+		d = pos[2] - tList[i]->pos[2];
+		//std::cout << b << " " << c << " " << d << " ";
+		a += sqrt(b*b + c*c + d*d);
+	}
+	free(tList);
+	return a;
+}
 
 float distToTarget(NODE *node, TARGET *tar)
 {
@@ -349,7 +494,6 @@ void CCD(NODE *cur, TARGET *tar)
 {
 	if (!cur) { return; }
 	if (!tar) { return; }
-	std::cout << cur->name << std::endl;
 	NODE *end = getFirstEndEffector(cur);
 	NODE *oEnd = end;
 	float epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
@@ -477,3 +621,4 @@ void CCD(NODE *cur, TARGET *tar)
 
 	//std::cout << "Eulers: " << cur->euler[0] << " " << cur->euler[1] << " " <<cur->euler[2] << std::
 }
+

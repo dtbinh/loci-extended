@@ -18,9 +18,11 @@ typedef unsigned char BYTE;
 typedef unsigned long DWORD;
 typedef unsigned int UINT;
 
+struct TARGET;
 struct NODE
 {
   char *name;
+
   float length[3];    // length of segment
   float offset[3];    // Transitional offset with respect to the end of the parent link
   float euler[3];     // Rotation
@@ -30,8 +32,9 @@ struct NODE
   NODE *parent;       // Back pointer to parent node
   float **froset;     // Array of offsets for each frame
   float **freuler;    // Array of angles for each frame
-  float **flspace;    // World Space Position of node end.
+  //float **flspace;    // World Space Position of node end.
   float *scale;       // Array of scalefactors for each frame
+  TARGET *target;
   BYTE DOFs;          // Used to determine what DOFs the segment has
 };
 
@@ -100,14 +103,14 @@ inline void SetupFrames(NODE* seg, long frames)
 {
   seg->froset = (float**) malloc (sizeof(float*) * frames);
   seg->freuler = (float**) malloc (sizeof(float*) * frames);
-  seg->flspace = (float**) malloc (sizeof(float*) * frames);
+  //seg->flspace = (float**) malloc (sizeof(float*) * frames);
   seg->scale = (float*) malloc (sizeof(float) * frames);
 
   for (long i=0; i<frames; ++i)
   {
     seg->froset[i] = (float*) malloc(sizeof(float*) * 3);
     seg->freuler[i] = (float*) malloc(sizeof(float*) * 3);
-    seg->flspace[i] = (float*) malloc(sizeof(float*) * 3);
+    //seg->flspace[i] = (float*) malloc(sizeof(float*) * 3);
   }
 }
 
