@@ -281,6 +281,7 @@ void setupChainLonger()
 	return;
 }
 
+/*
 float distToTarget(NODE *node)
 {
 	if (node == NULL) { return 0; }
@@ -302,6 +303,7 @@ float distToTarget(NODE *node)
 	free(tList);
 	return a;
 }
+*/
 
 void display(void)
 {

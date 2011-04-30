@@ -98,6 +98,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	leftcollar->limXmin = -360; leftcollar->limXmax = 360;
 	leftcollar->limYmin = -360; leftcollar->limYmax = 360;
 	leftcollar->limZmin = -360; leftcollar->limZmax = 360;
+	leftcollar->weight = 1;
 
 	leftuparm->name = "LeftUpArm";
 	leftuparm->length[0] = 0.007;
@@ -112,6 +113,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	leftuparm->limXmin = -360; leftuparm->limXmax = 360;
 	leftuparm->limYmin = -360; leftuparm->limYmax = 360;
 	leftuparm->limZmin = -360; leftuparm->limZmax = 360;
+	leftuparm->weight = 1;
 
 
 
@@ -126,6 +128,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	leftlowarm->limXmin = -360; leftlowarm->limXmax = 360;
 	leftlowarm->limYmin = -360; leftlowarm->limYmax = 360;
 	leftlowarm->limZmin = -360; leftlowarm->limZmax = 360;
+	leftlowarm->weight = 1;
 
 	lefthand->name = "leftHand";
 	lefthand->parent = leftlowarm;
@@ -136,6 +139,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	lefthand->limXmin = -360; lefthand->limXmax = 360;
 	lefthand->limYmin = -360; lefthand->limYmax = 360;
 	lefthand->limZmin = -360; lefthand->limZmax = 360;
+	lefthand->weight = 1;
 
 
 
@@ -151,6 +155,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	rightcollar->limXmin = -20; rightcollar->limXmax = 20;
 	rightcollar->limYmin = -45; rightcollar->limYmax = 17;
 	rightcollar->limZmin = -30; rightcollar->limZmax = 16;
+	rightcollar->weight= 1;
 
 	rightuparm->name = "rightUpArm";
 	rightuparm->length[0] = -0.008*s; rightuparm->length[1] = -0.313*s; rightuparm->length[2] = -0.002*s;
@@ -163,6 +168,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	rightuparm->limXmin = -360; rightuparm->limXmax = 360;
 	rightuparm->limYmin = -90; rightuparm->limYmax = 90;
 	rightuparm->limZmin = -90; rightuparm->limZmax = 90;
+	rightuparm->weight= 1;
 
 	rightlowarm->name = "rightLowArm";
 	rightlowarm->length[0] = 0.00; rightlowarm->length[1] = -0.308*s; rightlowarm->length[2] = 0.065*s;
@@ -175,6 +181,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	rightlowarm->limXmin = -20; rightlowarm->limXmax = 20;
 	rightlowarm->limYmin = -20; rightlowarm->limYmax = 20;
 	rightlowarm->limZmin = -120; rightlowarm->limZmax = 0;
+	rightlowarm->weight= 1;
 
 	righthand->name = "rightHand";
 	righthand->parent = rightlowarm;
@@ -182,6 +189,7 @@ void setupFigure(NODE** nl, int &lennl, TARGET** tl)
 	righthand->length[0] = -0.004*s; righthand->length[1] = -0.200*s; righthand->length[2] = 0.051*s;
 	righthand->offset[0] = 0; righthand->offset[1] = 0; righthand->offset[2] = 0;
 	righthand->euler[0] = 0; righthand->euler[1] = 0; righthand->euler[2] = 0;
+	righthand->weight= 1;
 	//righthand->limXmin = -20; righthand->limXmax = 20;
 	//righthand->limYmin = -80; righthand->limYmax = 80;
 	//righthand->limZmin = -20; righthand->limZmax = 20;

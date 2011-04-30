@@ -56,7 +56,7 @@ void getEndEffector(NODE *cur, int *noofends, NODE **retList)
 }
 NODE* getFirstEndEffector(NODE *seg)
 {
-	if (seg->child[0])
+	if (seg->noofchildren >= 1)
 	{
 		getFirstEndEffector(seg->child[0]);
 	}
@@ -65,6 +65,22 @@ NODE* getFirstEndEffector(NODE *seg)
 		return seg;
 	}
 }
+
+TARGET* getFirstTarget(NODE *cur)
+{
+	//std::cout << "G-t for " << cur->name << " - " << std::flush;
+	//std::cout << "nooftargets:" << *nooftargets << " " << std::flush;
+	
+	if (cur->target != NULL) {
+		return cur->target;
+   	} else {
+		if (cur->child[0])
+		{
+			getFirstTarget(cur->child[0]);
+		} else { return NULL; }
+	}
+}
+
 
 Matrix fillRotMat(float a, float b, float g)
 {
@@ -429,4 +445,178 @@ void CCD(NODE *cur)
 
 
 }
+
+float distToTarget(NODE *node)
+{
+	if (node == NULL) { return 0; }
+	float a = 0;
+	TARGET **tList; int nooftar = 0;
+	tList = (TARGET**) malloc(sizeof(TARGET*) * nooftargets);
+	getTarget (node, &nooftar, tList);
+	for (int i = 0; i< nooftar; i++)
+	{
+		float b,c,d;
+		float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+		calcEndPos(node, pos);
+		b = pos[0] - tList[i]->pos[0];
+		c = pos[1] - tList[i]->pos[1];
+		d = pos[2] - tList[i]->pos[2];
+		//std::cout << b << " " << c << " " << d << " ";
+		a += sqrt(b*b + c*c + d*d);
+	}
+	free(tList);
+	return a;
+}
+
+bool jacobianSing(NODE *node)
+{
+	float errorTolerance = 10; 
+	float closeTol = 0.05;
+
+	NODE *end = getFirstEndEffector(node);
+	if (distToTarget(end) < closeTol) { return true; }
+
+	int noofnodes = 4;
+	Matrix TH = Matrix(3,noofnodes);
+	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
+	ColumnVector W = ColumnVector(noofnodes);
+	Matrix S = Matrix(3, noofnodes);
+	Matrix V = Matrix(3, noofnodes);
+	Matrix J = Matrix(3, noofnodes);
+	Matrix dX = Matrix(3, noofnodes);
+	NODE *startNode= node;
+
+	
+
+	int m = 0;
+	float axis[3*noofnodes];
+	while (node)
+	{
+		TH(0,m) = node->euler[0];
+		TH(1,m) = node->euler[1];
+		TH(2,m) = node->euler[2];
+		//W(m,m) = node->weight;
+		//W(m) = node->weight;
+		W(m) = 1;
+
+		float epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
+		float ppos[3]; ppos[0] = 0; ppos[1] = 0; ppos[2] = 0;
+		float endpos[3]; endpos[0] = 0; endpos[1] = 0; endpos[2] = 0;
+		calcEndPos(node, epos);
+		if (node->parent) { calcEndPos(node->parent, ppos); }
+		calcEndPos(end, endpos);
+		TARGET *tar = getFirstTarget(end);
+
+		//dX = distance from target to end effector
+		dX(0, m) = tar->pos[0] - endpos[0];   //Minimise dX
+		dX(1, m) = tar->pos[1] - endpos[1];
+		dX(2, m) = tar->pos[2] - endpos[2];
+		
+		float ej[3]; float tj[3];
+		ej[0] = endpos[0] - ppos[0];
+		ej[1] = endpos[1] - ppos[1];
+		ej[2] = endpos[2] - ppos[2];
+
+
+		tj[0] = tar->pos[0] - ppos[0];
+		tj[1] = tar->pos[1] - ppos[1];
+		tj[2] = tar->pos[2] - ppos[2];
+
+
+		axis[(m*3)+0] = (ej[1]*tj[2]) - (ej[2]*tj[1]);
+		axis[(m*3)+1] = (ej[2]*tj[0]) - (ej[0]*tj[2]);
+		axis[(m*3)+2] = (ej[0]*tj[1]) - (ej[1]*tj[0]);
+
+		float lenAxis = sqrt(axis[(m*3)+0]*axis[(m*3)+0] + axis[(m*3)+1]*axis[(m*3)+1] + axis[(m*3)+2]*axis[(m*3)+2]);
+
+		axis[(m*3)+0] /= lenAxis;
+		axis[(m*3)+1] /= lenAxis;
+		axis[(m*3)+2] /= lenAxis;
+
+		/*
+		glPushMatrix();
+			glTranslatef(ppos[0], ppos[1], ppos[2]);
+			glBegin(GL_LINE);
+				glVertex3f(-axis[m*3+0]/4, -axis[m*3+1]/4, -axis[m*3+2]/4);
+				glVertex3f( axis[m*3+0]/4,  axis[m*3+1]/4,  axis[m*3+2]/4);
+			glEnd();
+		glPopMatrix();
+		*/
+
+		//Fake Cross product to fill the Jacobian
+		J(0, m) = (ej[1]*axis[2]) - (ej[2]*axis[1]);
+		J(1, m) = (ej[2]*axis[0]) - (ej[0]*axis[2]);
+		J(2, m) = (ej[0]*axis[1]) - (ej[1]*axis[0]);
+
+		//std::cout << "V" << V << std::endl; 
+		//std::cout << "J" << J << std::endl; 
+
+		m++;
+		if (node->noofchildren > 0) {node = node->child[0]; }
+		else { node = NULL; } 
+	}
+
+	//Calculate Distance of end effector to Target. If close, Stop.
+	//std::cout << "dist = " << distToTarget(end) << std::endl;
+	
+	
+	
+	
+	/*
+	//If error is small, stop iterating
+	//If large, halve dX
+	Matrix JJ = J*J.pseudo_inverse();
+	Matrix error = Matrix(noofnodes, noofnodes);
+	error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
+	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
+	{
+		error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
+		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
+	}
+*/
+	ColumnVector NewTH = ColumnVector(noofnodes);
+	//ColumnVector W = ColumnVector(noofnodes).fill(1);
+	//std::cout << J.pseudo_inverse()*dX << std::endl;
+	NewTH = (J.pseudo_inverse()*dX*W);
+	//std::cout << TH << " + " << NewTH << std::endl;
+	
+
+	//Update node angles.
+	node = startNode;
+	for (int i =0; i<NewTH.length(); i++)	
+	{
+		float taxis[3];
+		taxis[0] = axis[(i*3)+0]; 
+		taxis[1] = axis[(i*3)+1]; 
+		taxis[2] = axis[(i*3)+2];
+		float eul[3]; eul[0] = 0; eul[1] = 0; eul[2] = 0;
+
+		radAngleAxisRot(degRad(NewTH(i)), taxis, eul);
+		if (node != NULL)
+		{
+			node->euler[0] += radDeg(eul[0]);
+			node->euler[1] += radDeg(eul[1]);
+			node->euler[2] += radDeg(eul[2]);
+/*
+			while (node->euler[0] > 360) { node->euler[0] -= 360; }
+			while (node->euler[0] < -360) { node->euler[0] += 360; }
+			while (node->euler[1] > 360) { node->euler[1] -= 360; }
+			while (node->euler[1] > 360) { node->euler[1] -= 360; }
+			while (node->euler[2] < -360) { node->euler[2] += 360; }
+			while (node->euler[2] < -360) { node->euler[2] += 360; }
+*/
+
+if ((node->limXmax) &&(node->euler[0] > node->limXmax)) { node->euler[0] = node->limXmax; }
+	if ((node->limXmin) &&(node->euler[0] < node->limXmin)) { node->euler[0] = node->limXmin; }
+	if ((node->limYmax) &&(node->euler[1] > node->limYmax)) { node->euler[1] = node->limYmax; }
+	if ((node->limYmin) &&(node->euler[1] < node->limYmin)) { node->euler[1] = node->limYmin; }
+	if ((node->limZmax) &&(node->euler[2] > node->limZmax)) { node->euler[2] = node->limZmax; }
+	if ((node->limZmin) &&(node->euler[2] < node->limZmin)) { node->euler[2] = node->limZmin; }
+
+			if (node->noofchildren > 0) { 		node = node->child[0]; }
+		} else { std::cout << "Error: Array too long for chain" << std::endl; }
+	}
+	return false;
+}
+
 #endif
