@@ -29,7 +29,9 @@ bool mult(float* A, int m1, int n1, float* B, int m2, int n2, float* res);
 void fillRotMat(float a, float b, float g, float *rotMat);
 void radAngleAxisRot(float rotAng, float *axis, float *eulers);
 void calcEndPos(NODE *end, float *pos);
+void calcEndPos(NODE *end, float *pos, int frame);
 float distToTarget(NODE *node, TARGET *tar);
+float distToTarget(NODE *node);
 NODE* getFirstEndEffector(NODE *seg);
 void CCD(NODE *cur, TARGET *tar);
 #endif

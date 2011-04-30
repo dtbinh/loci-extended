@@ -138,6 +138,8 @@ void display()
 void keyFunc(unsigned char key, int x, int y)
 {
 	if (key == 0x1B) { std::cout << "ESC - Quitting" << std::endl; exit(0); }
+	Output3D->moveTarget(key);
+
 }
 void mouseFunc(int button, int state, int x, int y)
 {
@@ -214,7 +216,6 @@ int main (int argc, char **argv)
 	} 
 //	std::cout << "Loading Filename " << filename << std::endl;
 	loadFilename(filename);
-
 
 	glutMainLoop();
 }

@@ -3,7 +3,9 @@
 #include <iostream>
 #include <cmath>
 
+int nooftargets = 0;
 TARGET *targetList[5];
+bool doJac = false;
 
 DisplayGL::DisplayGL() : body(0), header(0), m_pDC(0), lasttime(::GetTickCount()), frames(0)
 {
@@ -15,11 +17,22 @@ DisplayGL::DisplayGL() : body(0), header(0), m_pDC(0), lasttime(::GetTickCount()
   targetList[0]->pos[0] = 0;
   targetList[0]->pos[1] = 0;
   targetList[0]->pos[2] = 0;
+  nooftargets++;
   Init();
 }
 
 
 DisplayGL::~DisplayGL() {}
+
+void DisplayGL::moveTarget(unsigned char key)
+{
+	if (key == 'j') { targetList[0]->pos[0] -= 0.1;	}
+	if (key == 'l') { targetList[0]->pos[0] += 0.1;	}
+	if (key == 'k') { targetList[0]->pos[1] -= 0.1;	}
+	if (key == 'i') { targetList[0]->pos[1] += 0.1;	}
+	if (key == 'u') { targetList[0]->pos[2] += 0.1;	}
+	if (key == 'o') { targetList[0]->pos[2] -= 0.1;	}
+}
 
 void DisplayGL::Init()
 {
@@ -68,34 +81,51 @@ void setupCCD(NODE *start, TARGET *target)
 	}
 }
 
+void doIK(NODE *start, NODE *end)
+{
+		int count = 0;
+		if (doJac)
+		{
+			bool c = false;
+			while ((count < 30) && (c == false))
+			{
+				std::cout << "Jacobian Not Implemented" << std::endl;
+				//c = jacobianSing(start);
+				count ++;
+			}
+		} else {
+			std::cout << "Else " << std::endl;
+
+			std::cout << end->name << " " << distToTarget(end) << std::endl;
+			while ((count < 30) && (distToTarget(end) > 0.05))
+			{
+				//std::cout << distToTarget(nList[i]) << std::endl;
+				NODE *node = end;
+				do 
+				{
+					CCD(node, targetList[0]);
+					node = node->parent;
+				} while (node != start->parent);
+				count++;
+			}
+		}
+
+}
+
+
 void DisplayGL::Draw()
 {
-  //MessageBoxa("DRAW");
+	std::cout << header->euler[0][0] << " ";
+	std::cout << header->euler[0][1] << " ";
+	std::cout << header->euler[0][2] << std::endl;
+	std::cout << header->euler[1][0] << " ";
+	std::cout << header->euler[1][1] << " ";
+	std::cout << header->euler[1][2] << std::endl;
+	std::cout << header->euler[2][0] << " ";
+	std::cout << header->euler[2][1] << " ";
+	std::cout << header->euler[2][2] << std::endl;
   glPushMatrix();
 
-   // glTranslatef(0.0f, 0.0f, 0.0f);
-   // glRotatef(centre[0], 1.0f, 0.0f, 0.0f);
-   // glRotatef(centre[1], 0.0f, 1.0f, 0.0f);
-   // glRotatef(centre[2], 0.0f, 0.0f, 1.0f);
-
-
-  /*
-  std::cout << "Header euler" << std::endl;
-  std::cout << header->euler[0][0] << " " << header->euler[0][1] << " " << header->euler[0][2] << std::endl;
-  std::cout << header->euler[1][0] << " " << header->euler[1][1] << " " << header->euler[1][2] << std::endl;
-  std::cout << header->euler[2][0] << " " << header->euler[2][1] << " " << header->euler[2][2] << std::endl;
-*/	
-  
-	//for (int i = 0; i < header->noofeffectors; i++)
-	//	{
-		//	if (!strcmp(effectorlist[i]->name, "Head")) 
-		//	{			
-			//	if ( header->euler[0][1] = 1 ) { effectorlist[i]->euler[0] = 45; }
-				//if ( header->euler[1][1] = 1 ) { effectorlist[i]->euler[1] = 45; }
-				//if ( header->euler[2][1] = 1 ) { effectorlist[i]->euler[2] = 45; }
-		//	}	
-		//}
-  
   /*
   NODE *found = searchName(body, "RightCollar");
   if (found)
@@ -105,18 +135,40 @@ void DisplayGL::Draw()
   }
   */
 
-  NODE *found = searchName(body, "Head");
+  NODE *found = searchName(body, "Hips");
   if (found)
   {
   	//std::cout << "FOUND" << std::endl;	  
 	//setupCCD(found, targetList[0]);
 	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
-	calcEndPos(found, pos);
-	std::cout << "Final head Pos = " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+	calcEndPos(found, pos, header->currentframe);
+	std::cout << header->currentframe << " Final hips Pos = " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 	glPushMatrix();
 		glTranslatef(pos[0], pos[1], pos[2]);
 		glColor3f(0, 0, 1);
-		glutSolidSphere(0.1, 5, 5);
+		glutSolidSphere(0.05, 5, 5);
+	glPopMatrix();
+  }
+	glPushMatrix();
+		glTranslatef(0, 0, 0);
+		glColor3f(0, 0, 1);
+		glutSolidSphere(0.05, 5, 5);
+	glPopMatrix();
+
+
+  found = NULL;
+  found = searchName(body, "LeftHand");//"Head");
+  if (found)
+  {
+	  found->target = targetList[0];
+	doIK(found->parent->parent->parent, found);
+	float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
+	calcEndPos(found, pos, header->currentframe);
+	//std::cout << header->currentframe << " Final head Pos = " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+	glPushMatrix();
+		glTranslatef(pos[0], pos[1], pos[2]);
+		glColor3f(0, 0, 1);
+		glutSolidSphere(0.05, 5, 5);
 	glPopMatrix();
   }
 
@@ -125,58 +177,23 @@ void DisplayGL::Draw()
 	  EvaluateChildren(body);
   glPopMatrix();
 
+  for (int i=0; i<nooftargets; i++)
+  {
+	  TARGET *t = targetList[i];
+	  glPushMatrix();
+	    glColor3f(0, 1, 0);
+	  	glTranslatef(t->pos[0], t->pos[1], t->pos[2]);
+		glutWireSphere(0.1, 5, 5);
+	  glPopMatrix();
+  }
 
-  //Draw Positions of end effectors
-  
-  
-  /*
-	if (body)
-	{
-		for (int i = 0; i < header->noofeffectors; i++)
-		//for (int i = 0; i < 1 ; i++)
-		{
-			float *pos = new float[3];
-			pos[0] = 0; pos[1] = 0; pos[2] = 0;
-			if (effectorlist[i] != NULL)
-			{
-				nodeLocalPos(effectorlist[i], header->currentframe, pos);
-			}
 
-			std::cout << i << "LocalPos="<< pos[0] << ", " << pos[1] << ", " << pos[2] << "\n" << std::endl;
-			glPushMatrix();
-			  glColor3f(0, 0, 0.8f);
-			  glTranslatef(pos[0], pos[1], pos[2]);
-			  glutSolidSphere(0.05, 5, 5);
-			glPopMatrix();
-			
-			delete[] pos;
-		}
-		
-	}
-	*/
-	
 
   glPopMatrix();
 }
-/*
- glPushMatrix();
-   // glTranslatef(node->offset[0] + node->froset[header->currentframe][0], node->offset[1] + node->froset[header->currentframe][1], node->offset[2] + node->froset[header->currentframe][2]);
-
-    glRotatef(node->euler[0], (float) header->euler[0][0], (float) header->euler[0][1], (float) header->euler[0][2]);
-    glRotatef(node->euler[1], (float) header->euler[1][0], (float) header->euler[1][1], (float) header->euler[1][2]);
-    glRotatef(node->euler[2], (float) header->euler[2][0], (float) header->euler[2][1], (float) header->euler[2][2]);
-
-    glRotatef(node->freuler[header->currentframe][0], (float) header->euler[0][0], (float) header->euler[0][1], (float) header->euler[0][2]);
-    glRotatef(node->freuler[header->currentframe][1], (float) header->euler[1][0], (float) header->euler[1][1], (float) header->euler[1][2]);
-    glRotatef(node->freuler[header->currentframe][2], (float) header->euler[2][0], (float) header->euler[2][1], (float) header->euler[2][2]);
-
-    glBegin(GL_LINES);
-      glColor3f(node->colour[0], node->colour[1], node->colour[2]);
-      glVertex3f(0.0f, 0.0f, 0.0f);
-      glVertex3f(node->length[0] * node->scale[header->currentframe], node->length[1] * node->scale[header->currentframe], node->length[2] * node->scale[header->currentframe]);
-    glEnd();
-*/
+//
 //#define PI 3.141592653f
+/*
 void DisplayGL::nodeLocalPos(NODE* seg, long currentframe, float *pos)
 {
 	if (seg == NULL) { std::cout << "error: nodeLocalPos passed null node" << std::endl; return; }
@@ -192,6 +209,7 @@ void DisplayGL::nodeLocalPos(NODE* seg, long currentframe, float *pos)
 
 	return;
 } 
+*/
 
 void DisplayGL::SetupSegments(NODE* segs, MOCAPHEADER *header, NODE** effectorlist)
 {
