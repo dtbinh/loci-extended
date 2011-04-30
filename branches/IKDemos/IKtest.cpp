@@ -329,7 +329,7 @@ bool jacobian(NODE *node)
 	ColumnVector TH = ColumnVector(noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
 	ColumnVector W = ColumnVector(noofnodes);
-	Matrix J = Matrix(2, noofnodes);
+	Matrix J = Matrix(2, noofnodes).fill(0);
 	Matrix dX = Matrix(2, noofnodes);
 	NODE *startNode= node;
 

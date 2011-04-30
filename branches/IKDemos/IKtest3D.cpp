@@ -93,7 +93,10 @@ void keyPressed (unsigned char key, int x, int y) {
 			exit(0);
 			break;
 		case ' ':
-			doJac ^= 1;		 	break;
+			doJac ^= 1;		 
+			if (doJac)	{ std::cout << "Using Jacobian" << std::endl; }
+			else	{ std::cout << "Using CCD" << std::endl; }
+			break;
 		case 'l':
 			doLimit ^= 1;		break;
 		case 'j':
@@ -346,6 +349,58 @@ void setupChain()
 	return;
 }
 
+void setupChainWeighted()
+{
+	NODE *n1 = new NODE;
+	NODE *n2 = new NODE;
+	NODE *n3 = new NODE;
+	NODE *n4 = new NODE;
+
+	n1->name = "root";	n1->child = n2; 	n1->parent = NULL;
+	n2->name = "lower";	n2->child = n3; 	n2->parent = n1;
+	n3->name = "upper";	n3->child = n4; 	n3->parent = n2;
+	n4->name = "hand";	n4->child = NULL;	n4->parent = n3;
+
+	n1->length[0] = 0;	n1->length[1] = 1;	n1->length[2] = 0; 
+	n2->length[0] = 0;	n2->length[1] = 1;	n2->length[2] = 0; 
+	n3->length[0] = 0;	n3->length[1] = 1;	n3->length[2] = 0; 
+	n4->length[0] = 0;	n4->length[1] = 1;	n4->length[2] = 0; 
+	//std::cout << "n1 Setup" << std::endl;
+	
+	n1->offset[0] = 0;	n1->offset[1] = 0;	n1->offset[2] = 0;
+	n2->offset[0] = 0;	n2->offset[1] = 0;	n2->offset[2] = 0;
+	n3->offset[0] = 0;	n3->offset[1] = 0;	n3->offset[2] = 0;
+	n4->offset[0] = 0;	n4->offset[1] = 0;	n4->offset[2] = 0;
+	
+	n1->euler[0] = 45;	n1->euler[1] = 0;	n1->euler[2] = 45;
+	n2->euler[0] = -90;	n2->euler[1] = 0;	n2->euler[2] = 0;
+	n3->euler[0] = 0;	n3->euler[1] = 0;	n3->euler[2] = -90;
+	n4->euler[0] = 0;	n4->euler[1] = 0;	n4->euler[2] = 25;
+	
+	
+	/*
+	n1->weight = 2.5;
+	n2->weight = 1.1;
+	n3->weight = 0.3;
+	n4->weight = 0.1;
+*/	
+
+	
+	n1->weight = 0.1;
+	n2->weight = 0.3;
+	n3->weight = 0.8;
+	n4->weight = 1
+	
+
+	nodeList[noofnodes++] = n1; 
+	nodeList[noofnodes++] = n2; 
+	nodeList[noofnodes++] = n3; 
+	nodeList[noofnodes++] = n4; 
+	//std::cout << "LEaving Exit" << std::endl;
+	
+	//normaliseWeights(n1);
+	return;
+}
 
 float distToTarget(NODE *node)
 {
@@ -371,7 +426,7 @@ bool jacobian(NODE *node)
 	float closeTol = 0.05;
 	Matrix TH = Matrix(3,noofnodes);
 	//Matrix W = Matrix(noofnodes, noofnodes).fill(0);
-	//ColumnVector W = ColumnVector(noofnodes);
+	ColumnVector W = ColumnVector(noofnodes);
 	Matrix S = Matrix(3, noofnodes);
 	Matrix V = Matrix(3, noofnodes);
 	Matrix J = Matrix(3, noofnodes);
@@ -387,7 +442,7 @@ bool jacobian(NODE *node)
 		TH(1,m) = node->euler[1];
 		TH(2,m) = node->euler[2];
 		//W(m,m) = node->weight;
-		//W(m) = node->weight;
+		W(m) = node->weight;
 
 		float epos[3]; epos[0] = 0; epos[1] = 0; epos[2] = 0;
 		float ppos[3]; ppos[0] = 0; ppos[1] = 0; ppos[2] = 0;
@@ -463,7 +518,7 @@ bool jacobian(NODE *node)
 	}
 */
 	ColumnVector NewTH = ColumnVector(noofnodes);
-	ColumnVector W = ColumnVector(noofnodes).fill(1);
+	//ColumnVector W = ColumnVector(noofnodes).fill(1);
 	//std::cout << J.pseudo_inverse()*dX << std::endl;
 	NewTH = (J.pseudo_inverse()*dX*W);
 	//std::cout << TH << " + " << NewTH << std::endl;
@@ -597,6 +652,7 @@ void CCD(NODE *cur)
 	float rotAng = acos(cosA);
 	if (rotAng < 0.01 ) { return; }
 	if (sinA < 0) { rotAng = -rotAng; }
+	rotAng *= cur->weight;
 	//if (axis[2] < 0) { rotAng = -rotAng; }
 	//std::cout << "RotAng: " << radDeg(rotAng) << std::endl;
 	//rotAng *= cur->weight;
@@ -781,7 +837,8 @@ int main (int argc, char **argv) {
 	glutCreateWindow("IK Tests 3D");
 	//glLineWidth(6);
 	
-        setupChain();
+        //setupChain();
+        setupChainWeighted();
 
 tP[0] = 2; tP[1] = 2; tP[2] = 2;
 tP[3] = -2; tP[4] = 1; tP[5] = 1;

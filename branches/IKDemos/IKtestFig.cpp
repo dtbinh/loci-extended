@@ -13,8 +13,9 @@ bool* keyStates = new bool[256];
 bool* keySpecialStates = new bool[256];
 
 float atX = 0, atZ = 0; float atY = 2;
-float eyeX = 0; float eyeY = 2.1f; float eyeZ = 7;
+float eyeX = -2; float eyeY = 2.1f; float eyeZ = 5;
 
+bool doJac = true;
 
 GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0};
 GLfloat whiteSpecularLight[] = { 1.0, 1.0, 1.0};
@@ -77,6 +78,8 @@ void keyPressed (unsigned char key, int x, int y) {
 	if (keyStates['i'])   	{ targetList[0]->pos[1] += d; }
 	if (keyStates['u'])  	{ targetList[0]->pos[2] -= d; }
 	if (keyStates['o'])   	{ targetList[0]->pos[2] += d; }
+
+	if (keyStates[' '])		{ doJac ^= 1; if (doJac) { std::cout << "Using Jacobian" << std::endl; } else { std::cout << "Using CCD" << std::endl; }}
 
 }
 
@@ -285,6 +288,33 @@ void setupChainLonger()
 	return;
 }
 
+void doIK(NODE *start, NODE *end)
+{
+		int count = 0;
+		if (doJac)
+		{
+			bool c = false;
+			while ((count < 30) && (c == false))
+			{
+				c = jacobianSing(start);
+				count ++;
+			}
+		} else {
+
+			while ((count < 30) && (distToTarget(end) > 0.05))
+			{
+				//std::cout << distToTarget(nList[i]) << std::endl;
+				NODE *node = end;
+				do 
+				{
+					CCD(node);
+					node = node->parent;
+				} while (node != start->parent);
+				count++;
+			}
+		}
+
+}
 
 void display(void)
 {
@@ -329,38 +359,14 @@ void display(void)
 	{
 		if (nList[i]->name == "rightHand")
 		{
-			float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
-			calcEndPos(nList[i], pos);
-			glPushMatrix();
-				glTranslatef(pos[0], pos[1], pos[2]);
-				glutSolidSphere(0.05, 5, 5);
-			glPopMatrix();
-			//CCD(nList[i]);
-			//CCD(nList[i]->parent);
-			//CCD(nList[i]->parent->parent);
-			CCD(nList[i]->parent->parent->parent);
+			doIK(nList[i]->parent->parent->parent, nList[i]);
 		}
 		if (nList[i]->name == "leftHand")
 		{
-			float pos[3]; pos[0] = 0; pos[1] = 0; pos[2] = 0;
-			calcEndPos(nList[i], pos);
-			glPushMatrix();
-				glTranslatef(pos[0], pos[1], pos[2]);
-				glutSolidSphere(0.05, 5, 5);
-			glPopMatrix();
-			//CCD(nList[i]);
-			//CCD(nList[i]->parent);
-			//CCD(nList[i]->parent->parent);
-			////CCD(nList[i]->parent->parent->parent);
+			doIK(nList[i]->parent->parent->parent, nList[i]);
 		}		
 	}
 
-	//CCD(nodeList[5]);
-	//CCD(nodeList[4]);
-	//CCD(nodeList[3]);
-	//CCD(nodeList[2]);
-	//CCD(nodeList[1]); 
-	//CCD(nodeList[0]);
 	//std::cout << std::endl;
 
 
@@ -411,7 +417,7 @@ int main (int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_DEPTH);
 	glutInitWindowSize(500, 500);
-	glutCreateWindow("First OpenGL Window");
+	glutCreateWindow("IK on a figure demo");
 	//glLineWidth(6);
 	
 	setupTargets();

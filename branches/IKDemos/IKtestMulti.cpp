@@ -177,9 +177,9 @@ void setupChain()
 	n3->name = "upper"; n3->child[0] = n4; n3->parent = n2;
 	n3b->name = "LUPPER"; n3b->child[0] = n4b; n3b->parent = n2;
 	n4->name = "hand";  n4->child[0] = NULL; n4->parent = n3; 
-	n4->target = targetList[1];
+	n4->target = targetList[0];
 	n4b->name = "LHAND";  n4b->child[0] = NULL; n4b->parent = n3b;
-	n4b->target = targetList[0];
+	n4b->target = targetList[1];
 
 
 	std::cout << "Setting chain Lens" << std::endl;
@@ -193,13 +193,14 @@ void setupChain()
 	//n5b->length[0] = 0; n5b->length[1] = 1;  
 	//std::cout << "n1 Setup" << std::endl;
 
-	n1->euler = 0; n2->euler = 0;
-	n3->euler = 0; n3b->euler = 0;
-	n4->euler = 0; n4b->euler = 0;
+	n1->euler = 0; n2->euler = 1;
+	n3->euler = 3; n3b->euler = 4;
+	n4->euler = 2; n4b->euler = 7;
 	
 	n1->weight = 1; n2->weight = 1;
 	n3->weight = 1; n3b->weight = 1;
 	n4->weight = 1; n4b->weight = 1;
+
 	nodeList[noofnodes++] = n1; 
 	nodeList[noofnodes++] = n2; 
 	nodeList[noofnodes++] = n3; 
@@ -541,6 +542,8 @@ void fillJ(ColumnVector *TH, ColumnVector *W, Matrix *dX, Matrix *J, NODE *node,
 	tarposS[0] /= noofends;
 	tarposS[1] /= noofends;
 	
+	std::cout << epos[0] << " " << epos[1] << std::endl;
+	std::cout << tarposS[0] << " " << tarposS[1] << std::endl;
 
 	glColor3f(0, 1.0/noofends, 0);
 	glPushMatrix();
@@ -553,8 +556,7 @@ void fillJ(ColumnVector *TH, ColumnVector *W, Matrix *dX, Matrix *J, NODE *node,
 		glTranslatef(endposS[0], endposS[1], 0);
 		glutSolidSphere(0.1, 7, 7);
 	glPopMatrix();
-
-
+	
 	//dX = distance from target to end effector
 	(*dX)(0, *m) = tarposS[0] - endposS[0];   //Minimise dX
 	(*dX)(1, *m) = tarposS[1] - endposS[1];
@@ -567,7 +569,7 @@ void fillJ(ColumnVector *TH, ColumnVector *W, Matrix *dX, Matrix *J, NODE *node,
 	(*m)++;
 	for (int i=0; i<node->noofchildren; i++)
 	{
-		fillJ(TH, W, J, dX, node->child[i], m);
+		fillJ(TH, W, dX, J, node->child[i], m);
 	}
 	return;
 }
@@ -608,10 +610,9 @@ bool jacobian(NODE *node)
 
 	//recursively fill the jacobian matrix
 	int m = 0;
-	fillJ(&TH, &W, &J, &dX, node, &m);
+	fillJ(&TH, &W, &dX, &J, node, &m);
 
 	std::cout << std::endl;
-	std::cout << TH.transpose() << "\n\n" << dX << "\n" << J <<std::endl;
 		
 	//Calculate Distance of end effector to Target. If close, Stop.
 	//if (distToTarget(end) < closeTol) {
@@ -623,6 +624,7 @@ bool jacobian(NODE *node)
 	//If error is small, stop iterating
 	//If large, halve dX
 	
+	/*
 	Matrix error = Matrix(noofnodes, noofnodes);
 	error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 	while ( sqrt(error.sumsq().sum(1)(0, 0)) > errorTolerance)
@@ -631,13 +633,12 @@ bool jacobian(NODE *node)
 		error = (identity_matrix(JJ.rows(),JJ.cols()) - (JJ)) * dX;
 		dX = quotient(dX, Matrix(dX.rows(),dX.cols()).fill(2.0));
 	}
+	*/
 	
 
 	ColumnVector NewTH = ColumnVector(noofnodes);
 	NewTH = TH + ((J.pseudo_inverse()*dX*W));
 
-	std::cout <<"NewTH " << NewTH.transpose() << std::endl;
-	
 	//std::cout << NewTH << std::endl;
 	//Update node angles.
 	node = startNode;

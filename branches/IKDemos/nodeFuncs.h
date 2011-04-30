@@ -276,14 +276,14 @@ void radAngleAxisRot(float rotAng, float *axis, float *eulers)
 	
 	if (axisMat(1,0) > 0.998)
 	{
-		std::cout << "sing NORTH" << std::endl;
+		//std::cout << "sing NORTH" << std::endl;
 		 //Singluarity at north Pole
 		 y = atan2(axisMat(0,2), axisMat(2,2));
 		 x = PI/2;
 		 z = 0;
 	} else if (axisMat(1,0) < -0.998)
 	{
-		std::cout << "sing SOUTH" << std::endl;
+		//std::cout << "sing SOUTH" << std::endl;
 		//Singularit at south pole
 		y = atan2(axisMat(0,2), axisMat(2,2));
 		x = -PI/2;
