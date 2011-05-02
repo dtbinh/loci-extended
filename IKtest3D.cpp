@@ -18,7 +18,8 @@ bool* keySpecialStates = new bool[256];
 
 bool jitterStart = false;
 bool doJac = false;
-bool doLimit = false;
+bool doLimit = true;
+float lim = 180;
 
 float atX = 0, atZ = 0; float atY = 2;
 float eyeX = -4; float eyeY = 2.1f; float eyeZ = 7;
@@ -98,7 +99,10 @@ void keyPressed (unsigned char key, int x, int y) {
 			else	{ std::cout << "Using CCD" << std::endl; }
 			break;
 		case 'l':
-			doLimit ^= 1;		break;
+			doLimit ^= 1;
+			if (doLimit)	{ std::cout << "Limits on" << std::endl; }
+			else	{ std::cout << "Limits off" << std::endl; }
+			break;
 		case 'j':
 			jitterStart ^= 1;	break;
 		case 'r':
@@ -386,11 +390,17 @@ void setupChainWeighted()
 */	
 
 	
+	/*
 	n1->weight = 0.1;
 	n2->weight = 0.3;
 	n3->weight = 0.8;
-	n4->weight = 1
+	n4->weight = 1;
+	*/
 	
+	n1->weight = 1;
+	n2->weight = 1;
+	n3->weight = 1;
+	n4->weight = 1;
 
 	nodeList[noofnodes++] = n1; 
 	nodeList[noofnodes++] = n2; 
@@ -540,12 +550,31 @@ bool jacobian(NODE *node)
 			node->euler[0] += radDeg(eul[0]);
 			node->euler[1] += radDeg(eul[1]);
 			node->euler[2] += radDeg(eul[2]);
+			if (doLimit)
+			{
+				while (node->euler[0] < -lim ) { node->euler[0] = -lim; }
+				while (node->euler[0] >  lim ) { node->euler[0] =  lim; }
+
+//				while (node->euler[1] < -lim ) { node->euler[1] = -lim; }
+//				while (node->euler[1] >  lim ) { node->euler[1] =  lim; }
+
+				while (node->euler[2] < -lim ) { node->euler[2] = -lim; }
+				while (node->euler[2] >  lim ) { node->euler[2] =  lim; }
+			} else {
+				//Normalise to between +- 360
+				if (node->euler[0] > 360) { node->euler[0] -= 360; } else if (node->euler[0] < -360) { node->euler[0] += 360; }
+				if (node->euler[1] > 360) { node->euler[1] -= 360; } else if (node->euler[1] < -360) { node->euler[1] += 360; }
+				if (node->euler[2] > 360) { node->euler[2] -= 360; } else if (node->euler[2] < -360) { node->euler[2] += 360; }
+			}
+
+/*
 			while (node->euler[0] > 360) { node->euler[0] -= 360; }
 			while (node->euler[0] < -360) { node->euler[0] += 360; }
 			while (node->euler[1] > 360) { node->euler[1] -= 360; }
 			while (node->euler[1] > 360) { node->euler[1] -= 360; }
 			while (node->euler[2] < -360) { node->euler[2] += 360; }
 			while (node->euler[2] < -360) { node->euler[2] += 360; }
+			*/
 			node = node->child;
 		} else { std::cout << "Error: Array too long for chain" << std::endl; }
 	}
@@ -640,7 +669,7 @@ void CCD(NODE *cur)
 			axis[2] = axisO[2];
 		}
 	}
-	//Set this nodes's ax}is as the axis for next time
+	//Set this nodes's axis as the axis for next time
 	nodeAxisMap[cur] = axis;
 
         //std::cout << axis[0] << " " << axis[1] << " " << axis[2] << std::endl;
@@ -668,12 +697,11 @@ void CCD(NODE *cur)
        // std::cout << cur->euler[0] << " " << cur->euler[1] << " " << cur->euler[2] << std::endl;
 	if (doLimit)
 	{
-		float lim = 180;
 		while (cur->euler[0] < -lim ) { cur->euler[0] = -lim; }
 		while (cur->euler[0] >  lim ) { cur->euler[0] =  lim; }
 
-		while (cur->euler[1] < -lim ) { cur->euler[1] = -lim; }
-		while (cur->euler[1] >  lim ) { cur->euler[1] =  lim; }
+		//while (cur->euler[1] < -lim ) { cur->euler[1] = -lim; }
+		//while (cur->euler[1] >  lim ) { cur->euler[1] =  lim; }
 
 		while (cur->euler[2] < -lim ) { cur->euler[2] = -lim; }
 		while (cur->euler[2] >  lim ) { cur->euler[2] =  lim; }
