@@ -508,7 +508,7 @@ float distToTarget(NODE *node)
 void fillJ(ColumnVector *TH, ColumnVector *W, Matrix *dX, Matrix *J, NODE *node, int *m)
 {
 	if (!node) { return; }
-	std::cout << "m " << *m << " node: "<< node->name << std::endl;
+	//std::cout << "m " << *m << " node: "<< node->name << std::endl;
 	(*TH)(*m) = node->euler;
 	(*W)(*m) = node->weight;
 
@@ -542,8 +542,8 @@ void fillJ(ColumnVector *TH, ColumnVector *W, Matrix *dX, Matrix *J, NODE *node,
 	tarposS[0] /= noofends;
 	tarposS[1] /= noofends;
 	
-	std::cout << epos[0] << " " << epos[1] << std::endl;
-	std::cout << tarposS[0] << " " << tarposS[1] << std::endl;
+	//std::cout << epos[0] << " " << epos[1] << std::endl;
+	//std::cout << tarposS[0] << " " << tarposS[1] << std::endl;
 
 	glColor3f(0, 1.0/noofends, 0);
 	glPushMatrix();
@@ -612,7 +612,7 @@ bool jacobian(NODE *node)
 	int m = 0;
 	fillJ(&TH, &W, &dX, &J, node, &m);
 
-	std::cout << std::endl;
+	std::cout << J << std::endl;
 		
 	//Calculate Distance of end effector to Target. If close, Stop.
 	//if (distToTarget(end) < closeTol) {

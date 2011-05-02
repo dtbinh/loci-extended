@@ -430,6 +430,8 @@ n->name = "node";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = NULL; n->parent = NULL;
 n->euler[0] = 40;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
@@ -447,6 +449,8 @@ n->name = "node";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = NULL; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 30;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
@@ -464,6 +468,8 @@ n->name = "node";
 n->length[0] = 1; n->length[1] = 0; n->length[2] = 0;
 n->child = NULL; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = -90;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
@@ -482,6 +488,8 @@ n->name = "node";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = NULL; n->parent = NULL;
 n->euler[0] = 45;	n->euler[1] = 0;	n->euler[2] = 45;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
@@ -499,6 +507,8 @@ n->name = "node";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = NULL; n->parent = NULL;
 n->euler[0] = 45;	n->euler[1] = 20;	n->euler[2] = 60;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 float pos[3];
 pos[0] = 0; pos[1] = 0; pos[2] = 0;
@@ -518,6 +528,8 @@ n->name = "node"; na->name = "node2";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = NULL; 	na->parent = n;
@@ -540,6 +552,8 @@ TEST(DoubleNodeRotTop)
 	n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 	n->child = na; n->parent = NULL;
 	n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 	na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 	na->child = NULL; 	na->parent = n;
@@ -564,6 +578,8 @@ n->name = "node"; na->name = "node2";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = -45;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = NULL; 	na->parent = n;
@@ -586,6 +602,8 @@ n->name = "node"; na->name = "node2";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = -45;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = NULL; 	na->parent = n;
@@ -608,6 +626,8 @@ n->name = "node"; na->name = "node2";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 30;	n->euler[1] = 0;	n->euler[2] = -45;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = NULL; 	na->parent = n;
@@ -630,6 +650,8 @@ n->name = "node"; na->name = "node2";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 30;	n->euler[1] = 130;	n->euler[2] = -45;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = NULL; 	na->parent = n;
@@ -654,6 +676,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -681,6 +705,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -709,6 +735,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -737,6 +765,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -765,6 +795,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = -50;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -792,6 +824,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 0;	n->euler[1] = 0;	n->euler[2] = 45;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -819,6 +853,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 35;	n->euler[1] = 0;	n->euler[2] = 30;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
@@ -846,6 +882,8 @@ n->name = "node"; na->name = "node2"; nb->name = "node3";
 n->length[0] = 0; n->length[1] = 1; n->length[2] = 0;
 n->child = na; n->parent = NULL;
 n->euler[0] = 30;	n->euler[1] = 0;	n->euler[2] = 0;
+n->offset[0] = 0; 	n->offset[1] = 0;	n->offset[2] = 0;
+n->parent = NULL;
 
 na->length[0] = 0; 	na->length[1] = 1; na->length[2] = 0;
 na->child = nb; 	na->parent = n;
